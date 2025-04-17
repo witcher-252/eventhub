@@ -18,6 +18,12 @@ AplicaciÃ³n web para venta de entradas utilizada en la cursada 2025 de IngenierÃ
 
 `python manage.py migrate`
 
+### Crear usuario admin
+
+`python manage.py createsuperuser`
+
+### Llenar la base de datos
+
 `python manage.py loaddata fixtures/events.json`
 
 ## Iniciar app
