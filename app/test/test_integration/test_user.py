@@ -1,6 +1,6 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
@@ -15,7 +15,7 @@ class UserAuthenticationIntegrationTest(TestCase):
         self.assertTrue(User.objects.filter(username='newuser').exists())
 
     def test_login_user(self):
-        user = User.objects.create_user(username='testlogin', password='testpass123')
+        User.objects.create_user(username='testlogin', password='testpass123')
         response = self.client.post(reverse('login'), {
             'username': 'testlogin',
             'password': 'testpass123',
