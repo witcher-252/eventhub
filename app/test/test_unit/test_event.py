@@ -1,9 +1,11 @@
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
-from django.contrib.auth import get_user_model
+
 from app.models import Event
 
 User = get_user_model()
+
 
 class EventModelTest(TestCase):
     def test_create_event(self):
