@@ -20,6 +20,27 @@ def validate_event(data):
 class User(AbstractUser):
     is_organizer = models.BooleanField(default=False)
 
+    @classmethod
+    def validate_new_user(cls, email, username, password, password_confirm):
+        errors = {}
+
+        if email is None:
+            errors["email"] = "El email es requerido"
+        elif User.objects.filter(email=email).exists():
+            errors["email"] = "Ya existe un usuario con este email"
+
+        if email is None:
+            errors["username"] = "El username es requerido"
+        elif User.objects.filter(username=username).exists():
+            errors["username"] = "Ya existe un usuario con este nombre de usuario"
+
+        if password is None or password_confirm is None:
+            errors["password"] = "Las contraseñas son requeridas"
+        elif password != password_confirm:
+            errors["password"] = "Las contraseñas no coinciden"
+
+        return errors
+
 
 class Event(models.Model):
     title = models.CharField(max_length=200)
