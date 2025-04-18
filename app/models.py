@@ -29,7 +29,7 @@ class User(AbstractUser):
         elif User.objects.filter(email=email).exists():
             errors["email"] = "Ya existe un usuario con este email"
 
-        if email is None:
+        if username is None:
             errors["username"] = "El username es requerido"
         elif User.objects.filter(username=username).exists():
             errors["username"] = "Ya existe un usuario con este nombre de usuario"
