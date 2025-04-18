@@ -6,6 +6,7 @@ from app.models import Event
 
 User = get_user_model()
 
+
 class EventModelTest(TestCase):
     def test_create_event(self):
         organizer = User.objects.create_user(username="eventorganizer", password="pass")
