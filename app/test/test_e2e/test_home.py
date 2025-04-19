@@ -48,11 +48,11 @@ class HomeE2ETest(StaticLiveServerTestCase):
         expect(logo).to_have_attribute("href", "/")
 
         # Verificar que el boton de iniciar sesion este presente
-        login_btn = self.page.get_by_role("button", name="Ingresá")
+        login_btn = self.page.get_by_role("link", name="Ingresá")
         expect(login_btn).to_be_visible()
 
         # Verificar que el boton de crear cuenta este presente
-        signup_btn = self.page.get_by_role("button", name="Creá tu cuenta")
+        signup_btn = self.page.get_by_role("link", name="Creá tu cuenta")
         expect(signup_btn).to_be_visible()
 
         # Verificar que el boton de cerrar sesion no este presente
@@ -70,7 +70,7 @@ class HomeE2ETest(StaticLiveServerTestCase):
         """Test que verifica que la home carga correctamente"""
         self.page.goto(f"{self.live_server_url}/")
 
-        self.page.get_by_role("button", name="Ingresá").click()
+        self.page.get_by_role("link", name="Ingresá").click()
         expect(self.page).to_have_url(re.compile(".*/login"))
 
     def test_login_button_and_signup_button_not_visible_if_user_authenticated(self):
@@ -78,7 +78,7 @@ class HomeE2ETest(StaticLiveServerTestCase):
         user = self.create_test_user()
 
         self.page.goto(f"{self.live_server_url}/")
-        self.page.get_by_role("button", name="Ingresá").click()
+        self.page.get_by_role("link", name="Ingresá").click()
 
         # Llenar el formulario con credenciales válidas
         self.page.get_by_label("Usuario").fill(user.username)
@@ -88,11 +88,11 @@ class HomeE2ETest(StaticLiveServerTestCase):
         self.page.get_by_role("button", name="Iniciar sesión").click()
 
         # Verificar que el boton de iniciar sesion este presente
-        login_btn = self.page.get_by_role("button", name="Ingresá")
+        login_btn = self.page.get_by_role("link", name="Ingresá")
         expect(login_btn).to_have_count(0)
 
         # Verificar que el boton de crear cuenta este presente
-        signup_btn = self.page.get_by_role("button", name="Creá tu cuenta")
+        signup_btn = self.page.get_by_role("link", name="Creá tu cuenta")
         expect(signup_btn).to_have_count(0)
 
         # Verificar que el boton de cerrar sesion no este presente

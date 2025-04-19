@@ -25,15 +25,10 @@
                     <button class="btn btn-sm btn-outline-secondary" type="submit" name="logout">Salir</button>
                 </form>
                 {% else %}
-                <form class="d-flex" action={% url 'login' %} method="POST">
-                    {% csrf_token %}
-                    <button class="btn btn-sm btn-outline-primary" type="submit" name="login">Ingresá</button>
-                </form>
 
-                <form action="{% url 'register' %}" method="POST">
-                    {% csrf_token %}
-                    <button class="btn btn-sm btn-primary" type="submit" name="register">Creá tu cuenta</button>
-                </form>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'login' %}">Ingresá</>
+
+                <a class="btn btn-sm btn-primary" href="{% url 'register' %}">Creá tu cuenta</a>
                 {% endif %}
             </div>
         </div>
