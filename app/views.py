@@ -52,6 +52,10 @@ def login_view(request):
     return render(request, "accounts/login.html")
 
 
+def home(request):
+    return render(request, "home.html")
+
+
 @login_required
 def dashboard(request):
     events = Event.objects.all().order_by("date")

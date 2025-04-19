@@ -13,43 +13,26 @@
 </head>
 
 <body>
-
     <!-- Navbar solo visible si el usuario está autenticado -->
-    {% if user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar bg-body-tertiary">
         <div class="container-fluid">
-            <a
-                class="navbar-brand"
-                href="/"
-            >EventHub</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ml-auto">
-                    <!-- Links de navegación -->
-                    <li class="nav-item">
-                        <a
-                            class="nav-link"
-                            href="/dashboard/"
-                        >Dashboard</a>
-                    </li>
-                    <!-- Formulario de logout -->
-                    <li class="nav-item">
-                        <form
-                            action="{% url 'logout' %}"
-                            method="POST"
-                            class="d-inline"
-                        >
-                            {% csrf_token %}
-                            <button
-                                type="submit"
-                                class="btn btn-danger"
-                            >Cerrar sesión</button>
-                        </form>
-                    </li>
-                </ul>
+            <a class="navbar-brand" href="/">EventHub</a>
+
+            <div class="hstack gap-2">
+                {% if user.is_authenticated %}
+                <form class="d-flex" action={% url 'logout' %} method="POST">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-secondary" type="submit" name="logout">Salir</button>
+                </form>
+                {% else %}
+
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'login' %}">Ingresá</>
+
+                <a class="btn btn-sm btn-primary" href="{% url 'register' %}">Creá tu cuenta</a>
+                {% endif %}
             </div>
         </div>
     </nav>
-    {% endif %}
 
     {% block content %}
     {% endblock %}
