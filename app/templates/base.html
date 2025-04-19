@@ -22,17 +22,17 @@
                 {% if user.is_authenticated %}
                 <form class="d-flex" action={% url 'logout' %} method="POST">
                     {% csrf_token %}
-                    <button class="btn btn-sm btn-outline-secondary" type="submit">Salir</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="submit" name="logout">Salir</button>
                 </form>
                 {% else %}
                 <form class="d-flex" action={% url 'login' %} method="POST">
                     {% csrf_token %}
-                    <button class="btn btn-sm btn-outline-primary" type="submit">Ingresá</button>
+                    <button class="btn btn-sm btn-outline-primary" type="submit" name="login">Ingresá</button>
                 </form>
 
                 <form action="{% url 'register' %}" method="POST">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-primary">Creá tu cuenta</button>
+                    <button class="btn btn-sm btn-primary" type="submit" name="register">Creá tu cuenta</button>
                 </form>
                 {% endif %}
             </div>
