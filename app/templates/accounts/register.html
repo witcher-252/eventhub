@@ -11,10 +11,10 @@
                     <form
                         method="POST"
                         action="/accounts/register/"
-                        class="needs-validation"
+                        class="vstack gap-3"
                     >
                         {% csrf_token %}
-                        <div class="mb-3">
+                        <div>
                             <label
                                 for="email"
                                 class="form-label"
@@ -31,7 +31,7 @@
 
                             <div class="invalid-feedback">{{ errors.email }}</div>
                         </div>
-                        <div class="mb-3">
+                        <div>
                             <label
                                 for="username"
                                 class="form-label"
@@ -49,7 +49,7 @@
                             <div class="form-text">Solo letras, números y @/./+/-/_</div>
                             <div class="invalid-feedback">{{ errors.username }}</div>
                         </div>
-                        <div class="mb-3">
+                        <div>
                             <label
                                 for="password"
                                 class="form-label"
@@ -67,7 +67,7 @@
                                 ni
                                 solo números.</div>
                         </div>
-                        <div class="mb-3">
+                        <div>
                             <label
                                 for="password-confirm"
                                 class="form-label"
