@@ -1,7 +1,8 @@
 import os
+import re
 
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import expect, sync_playwright
 
 from app.models import User
 
@@ -42,22 +43,44 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         self.page.goto(f"{self.live_server_url}/accounts/register/")
 
         # Verificar que el formulario está presente
-        assert self.page.locator("form").is_visible()
-        assert self.page.locator("input[name='email']").is_visible()
-        assert self.page.locator("input[name='username']").is_visible()
-        assert self.page.locator("input[name='password']").is_visible()
-        assert self.page.locator("input[name='password-confirm']").is_visible()
-        assert self.page.locator("button[type='submit']").is_visible()
+        expect(self.page.locator("form")).to_be_visible()
+        expect(self.page.locator("input[name='csrfmiddlewaretoken']")).to_be_hidden()
+        expect(self.page.locator("input[name='email']")).to_be_visible()
+        expect(self.page.locator("input[name='username']")).to_be_visible()
+        expect(self.page.locator("input[name='password']")).to_be_visible()
+        expect(self.page.locator("input[name='password-confirm']")).to_be_visible()
+        expect(self.page.locator("input[name='is-organizer']")).to_be_visible()
+        expect(self.page.locator("button[type='submit']")).to_be_visible()
 
     def test_successful_registration(self):
         """Test que verifica el proceso de registro exitoso"""
         self.page.goto(f"{self.live_server_url}/accounts/register/")
 
         # Llenar el formulario con datos válidos
-        self.page.fill("input[name='email']", "nuevo@example.com")
-        self.page.fill("input[name='username']", "nuevo_usuario")
-        self.page.fill("input[name='password']", "password123")
-        self.page.fill("input[name='password-confirm']", "password123")
+        self.page.get_by_label("Email").fill("nuevo@example.com")
+        self.page.get_by_label("Usuario").fill("nuevo_usuario")
+        self.page.get_by_label("Contraseña", exact=True).fill("password123")
+        self.page.get_by_label("Confirmar contraseña").fill("password123")
+
+        # Enviar el formulario
+        self.page.click("button[type='submit']")
+
+        # Verificar que se redirige al dashboard
+        self.page.wait_for_url(f"{self.live_server_url}/dashboard/*")
+
+        # Verificar que el usuario fue creado en la base de datos
+        self.assertTrue(User.objects.filter(username="nuevo_usuario").exists())
+
+    def test_successful_registration_organizer(self):
+        """Test que verifica el proceso de registro exitoso de un organizador"""
+        self.page.goto(f"{self.live_server_url}/accounts/register/")
+
+        # Llenar el formulario con datos válidos
+        self.page.get_by_label("Email").fill("nuevo@example.com")
+        self.page.get_by_label("Usuario").fill("nuevo_usuario")
+        self.page.get_by_label("Contraseña", exact=True).fill("password123")
+        self.page.get_by_label("Confirmar contraseña").fill("password123")
+        self.page.get_by_label("Es organizador?").click()
 
         # Enviar el formulario
         self.page.click("button[type='submit']")
@@ -76,20 +99,20 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         self.page.goto(f"{self.live_server_url}/accounts/register/")
 
         # Llenar el formulario con un email existente
-        self.page.fill("input[name='email']", user.email)
-        self.page.fill("input[name='username']", "otro_usuario")
-        self.page.fill("input[name='password']", "password123")
-        self.page.fill("input[name='password-confirm']", "password123")
+        self.page.get_by_label("Email").fill(user.email)
+        self.page.get_by_label("Usuario").fill("otro_usuario")
+        self.page.get_by_label("Contraseña", exact=True).fill("password123")
+        self.page.get_by_label("Confirmar contraseña").fill("password123")
 
         # Enviar el formulario
         self.page.click("button[type='submit']")
 
         # Verificar que permanecemos en la página de registro
-        assert "/register/" in self.page.url
+        expect(self.page).to_have_url(re.compile(r".*/register"))
 
         # Verificar que se muestra el mensaje de error correspondiente
-        error_message = self.page.locator("text=Ya existe un usuario con este email")
-        assert error_message.is_visible()
+        error_message = self.page.get_by_text("Ya existe un usuario con este email")
+        expect(error_message).to_be_visible()
 
     def test_duplicate_username_registration(self):
         """Test que verifica el intento de registro con un nombre de usuario existente"""
@@ -99,50 +122,51 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         self.page.goto(f"{self.live_server_url}/accounts/register/")
 
         # Llenar el formulario con un username existente
-        self.page.fill("input[name='email']", "otro@example.com")
-        self.page.fill("input[name='username']", user.username)
-        self.page.fill("input[name='password']", "password123")
-        self.page.fill("input[name='password-confirm']", "password123")
+        self.page.get_by_label("Email").fill("otro@example.com")
+        self.page.get_by_label("Usuario").fill(user.username)
+        self.page.get_by_label("Contraseña", exact=True).fill("password123")
+        self.page.get_by_label("Confirmar contraseña").fill("password123")
 
         # Enviar el formulario
         self.page.click("button[type='submit']")
 
         # Verificar que permanecemos en la página de registro
-        assert "/register/" in self.page.url
+        expect(self.page).to_have_url(re.compile(r".*/register"))
 
         # Verificar que se muestra el mensaje de error correspondiente
-        error_message = self.page.locator("text=Ya existe un usuario con este nombre de usuario")
-        assert error_message.is_visible()
+        error_message = self.page.get_by_text("Ya existe un usuario con este nombre de usuario")
+        expect(error_message).to_be_visible()
 
     def test_password_mismatch_registration(self):
         """Test que verifica el intento de registro con contraseñas que no coinciden"""
         self.page.goto(f"{self.live_server_url}/accounts/register/")
 
         # Llenar el formulario con contraseñas diferentes
-        self.page.fill("input[name='email']", "nuevo@example.com")
-        self.page.fill("input[name='username']", "nuevo_usuario")
-        self.page.fill("input[name='password']", "password123")
-        self.page.fill("input[name='password-confirm']", "diferente456")
+        self.page.get_by_label("Email").fill("nuevo@example.com")
+        self.page.get_by_label("Usuario").fill("nuevo_usuario")
+        self.page.get_by_label("Contraseña", exact=True).fill("password123")
+        self.page.get_by_label("Confirmar contraseña").fill("diferente456")
 
         # Enviar el formulario
         self.page.click("button[type='submit']")
 
         # Verificar que permanecemos en la página de registro
-        assert "/register/" in self.page.url
+        expect(self.page).to_have_url(re.compile(r".*/register"))
 
         # Verificar que se muestra el mensaje de error correspondiente
-        error_message = self.page.locator("text=Las contraseñas no coinciden")
-        assert error_message.is_visible()
+        error_message = self.page.get_by_text("Las contraseñas no coinciden")
+        expect(error_message).to_be_visible()
 
     def test_login_page_loads(self):
         """Test que verifica que la página de login carga correctamente"""
         self.page.goto(f"{self.live_server_url}/accounts/login/")
 
         # Verificar que el formulario está presente
-        assert self.page.locator("form").is_visible()
-        assert self.page.locator("input[name='username']").is_visible()
-        assert self.page.locator("input[name='password']").is_visible()
-        assert self.page.locator("button[type='submit']").is_visible()
+        expect(self.page.locator("form")).to_be_visible()
+        expect(self.page.locator("input[name='csrfmiddlewaretoken']")).to_be_hidden()
+        expect(self.page.locator("input[name='username']")).to_be_visible()
+        expect(self.page.locator("input[name='password']")).to_be_visible()
+        expect(self.page.locator("button[type='submit']")).to_be_visible()
 
     def test_successful_login(self):
         """Test que verifica el proceso de login exitoso"""
@@ -152,8 +176,8 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         self.page.goto(f"{self.live_server_url}/accounts/login/")
 
         # Llenar el formulario con credenciales válidas
-        self.page.fill("input[name='username']", user.username)
-        self.page.fill("input[name='password']", "password123")
+        self.page.get_by_label("Usuario").fill(user.username)
+        self.page.get_by_label("Contraseña").fill("password123")
 
         # Enviar el formulario
         self.page.click("button[type='submit']")
@@ -166,18 +190,18 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         self.page.goto(f"{self.live_server_url}/accounts/login/")
 
         # Llenar el formulario con credenciales inválidas
-        self.page.fill("input[name='username']", "usuario_inexistente")
-        self.page.fill("input[name='password']", "password_incorrecto")
+        self.page.get_by_label("Usuario").fill("usuario_inexistente")
+        self.page.get_by_label("Contraseña").fill("password_incorrecto")
 
         # Enviar el formulario
         self.page.click("button[type='submit']")
 
         # Verificar que permanecemos en la página de login
-        assert "/login/" in self.page.url
+        expect(self.page).to_have_url(re.compile(r".*/login"))
 
         # Verificar que se muestra el mensaje de error correspondiente
-        error_message = self.page.locator("text=Usuario o contraseña incorrectos")
-        assert error_message.is_visible()
+        error_message = self.page.get_by_text("Usuario o contraseña incorrectos")
+        expect(error_message).to_be_visible()
 
     def test_wrong_password_login(self):
         """Test que verifica el intento de login con contraseña incorrecta"""
@@ -187,15 +211,15 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         self.page.goto(f"{self.live_server_url}/accounts/login/")
 
         # Llenar el formulario con username correcto pero password incorrecto
-        self.page.fill("input[name='username']", user.username)
-        self.page.fill("input[name='password']", "password_incorrecto")
+        self.page.get_by_label("Usuario").fill(user.username)
+        self.page.get_by_label("Contraseña").fill("password_incorrecto")
 
         # Enviar el formulario
         self.page.click("button[type='submit']")
 
         # Verificar que permanecemos en la página de login
-        assert "/login/" in self.page.url
+        expect(self.page).to_have_url(re.compile(r".*/login"))
 
         # Verificar que se muestra el mensaje de error correspondiente
-        error_message = self.page.locator("text=Usuario o contraseña incorrectos")
-        assert error_message.is_visible()
+        error_message = self.page.get_by_text("Usuario o contraseña incorrectos")
+        expect(error_message).to_be_visible()
