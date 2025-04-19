@@ -87,9 +87,6 @@ class HomeE2ETest(StaticLiveServerTestCase):
         # Enviar el formulario
         self.page.get_by_role("button", name="Iniciar sesión").click()
 
-        # Verificar que se redirige al dashboard
-        # self.page.wait_for_url(f"{self.live_server_url}/dashboard/*")
-
         # Verificar que el boton de iniciar sesion este presente
         login_btn = self.page.get_by_role("button", name="Ingresá")
         expect(login_btn).to_have_count(0)
