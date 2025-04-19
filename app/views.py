@@ -9,6 +9,7 @@ def register(request):
     if request.method == "POST":
         email = request.POST.get("email")
         username = request.POST.get("username")
+        is_organizer = request.POST.get("is-organizer") is not None
         password = request.POST.get("password")
         password_confirm = request.POST.get("password-confirm")
 
@@ -24,7 +25,9 @@ def register(request):
                 },
             )
         else:
-            user = User.objects.create_user(email=email, username=username, password=password)
+            user = User.objects.create_user(
+                email=email, username=username, password=password, is_organizer=is_organizer
+            )
             login(request, user)
             return redirect("dashboard")
 
