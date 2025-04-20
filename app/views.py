@@ -108,7 +108,12 @@ def event_form(request, id=None):
             datetime.datetime(int(year), int(month), int(day), int(hour), int(minutes))
         )
 
-        Event.new(title, description, scheduled_at, request.user)
+        if id is None:
+            Event.new(title, description, scheduled_at, request.user)
+        else:
+            event = get_object_or_404(Event, pk=id)
+            event.update(title, description, scheduled_at, request.user)
+
         return redirect("events")
 
     event = {}
