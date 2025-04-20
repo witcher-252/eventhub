@@ -4,6 +4,12 @@ from app.models import User
 
 
 class UserModelTest(TestCase):
+    def setUp(self):
+        # Crear un usuario para probar la validación de duplicados
+        self.existing_user = User.objects.create_user(
+            username="usuario_existente", email="existente@example.com", password="password123"
+        )
+
     def test_create_user(self):
         user = User.objects.create_user(username="testuser", password="testpass123")
         self.assertEqual(user.username, "testuser")
@@ -17,14 +23,6 @@ class UserModelTest(TestCase):
             username="organizeruser", password="testpass123", is_organizer=True
         )
         self.assertTrue(organizer.is_organizer)
-
-
-class TestUserValidation(TestCase):
-    def setUp(self):
-        # Crear un usuario para probar la validación de duplicados
-        self.existing_user = User.objects.create_user(
-            username="usuario_existente", email="existente@example.com", password="password123"
-        )
 
     def test_missing_email(self):
         """Test que valida que se retorne un error cuando el email es None"""

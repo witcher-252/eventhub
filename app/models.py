@@ -69,7 +69,7 @@ class Event(models.Model):
     def update(self, title, description, scheduled_at, organizer):
         self.title = title or self.title
         self.description = description or self.description
-        self.datetime = scheduled_at or self.scheduled_at
+        self.scheduled_at = scheduled_at or self.scheduled_at
         self.organizer = organizer or self.organizer
 
         self.save()

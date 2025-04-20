@@ -1,37 +1,21 @@
 import datetime
-import os
 import re
 
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.utils import timezone
-from playwright.sync_api import expect, sync_playwright
+from playwright.sync_api import expect
 
 from app.models import Event, User
 
-os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
-headless = os.environ.get("HEADLESS", 1) == 1
-slow_mo = os.environ.get("SLOW_MO", 0)
+from app.test.test_e2e.base import BaseE2ETest
 
 
-class EventE2ETest(StaticLiveServerTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.playwright = sync_playwright().start()
-        cls.browser = cls.playwright.chromium.launch(headless=headless, slow_mo=int(slow_mo))
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.browser.close()
-        cls.playwright.stop()
-        super().tearDownClass()
-
-    def tearDown(self):
-        # Cerrar la página después de cada test
-        self.page.close()
+class EventBaseTest(BaseE2ETest):
+    """Clase base específica para tests de eventos"""
 
     def setUp(self):
-        # Crear usuario para iniciar sesión
+        super().setUp()
+
+        # Crear usuario organizador
         self.organizer = User.objects.create_user(
             username="organizador",
             email="organizador@example.com",
@@ -39,7 +23,7 @@ class EventE2ETest(StaticLiveServerTestCase):
             is_organizer=True,
         )
 
-        # Crear usuario regular para iniciar sesión
+        # Crear usuario regular
         self.regular_user = User.objects.create_user(
             username="usuario",
             email="usuario@example.com",
@@ -66,19 +50,8 @@ class EventE2ETest(StaticLiveServerTestCase):
             organizer=self.organizer,
         )
 
-        # Crear un contexto y página de Playwright
-        self.context = self.browser.new_context()
-        self.page = self.context.new_page()
-
-    def login_user(self, user, password):
-        # Ir a la página de login
-        self.page.goto(f"{self.live_server_url}/accounts/login/")
-
-        self.page.get_by_label("Usuario").fill(user)
-        self.page.get_by_label("Contraseña").fill(password)
-        self.page.click("button[type='submit']")
-
     def _table_has_event_info(self):
+        """Método auxiliar para verificar que la tabla tiene la información correcta de eventos"""
         # Verificar encabezados de la tabla
         headers = self.page.locator("table thead th")
         expect(headers.nth(0)).to_have_text("Título")
@@ -102,6 +75,7 @@ class EventE2ETest(StaticLiveServerTestCase):
         expect(rows.nth(1).locator("td").nth(2)).to_have_text("15 mar 2025, 14:30")
 
     def _table_has_correct_actions(self, user_type):
+        """Método auxiliar para verificar que las acciones son correctas según el tipo de usuario"""
         row0 = self.page.locator("table tbody tr").nth(0)
 
         detail_button = row0.get_by_role("link", name="Ver Detalle")
@@ -124,9 +98,27 @@ class EventE2ETest(StaticLiveServerTestCase):
             expect(edit_button).to_have_count(0)
             expect(delete_form).to_have_count(0)
 
-    def test_events_page_display_as_organizer(self):
-        """Test que verifica la visualización correcta de la página de eventos"""
 
+class EventAuthenticationTest(EventBaseTest):
+    """Tests relacionados con la autenticación y permisos de usuarios en eventos"""
+
+    def test_events_page_requires_login(self):
+        """Test que verifica que la página de eventos requiere inicio de sesión"""
+        # Cerrar sesión si hay alguna activa
+        self.context.clear_cookies()
+
+        # Intentar ir a la página de eventos sin iniciar sesión
+        self.page.goto(f"{self.live_server_url}/events/")
+
+        # Verificar que redirige a la página de login
+        expect(self.page).to_have_url(re.compile(r"/accounts/login/"))
+
+
+class EventDisplayTest(EventBaseTest):
+    """Tests relacionados con la visualización de la página de eventos"""
+
+    def test_events_page_display_as_organizer(self):
+        """Test que verifica la visualización correcta de la página de eventos para organizadores"""
         self.login_user("organizador", "password123")
         self.page.goto(f"{self.live_server_url}/events/")
 
@@ -181,16 +173,9 @@ class EventE2ETest(StaticLiveServerTestCase):
         no_events_message = self.page.locator("text=No hay eventos disponibles")
         expect(no_events_message).to_be_visible()
 
-    def test_events_page_requires_login(self):
-        """Test que verifica que la página de eventos requiere inicio de sesión"""
-        # Cerrar sesión si hay alguna activa
-        self.context.clear_cookies()
 
-        # Intentar ir a la página de eventos sin iniciar sesión
-        self.page.goto(f"{self.live_server_url}/events/")
-
-        # Verificar que redirige a la página de login
-        expect(self.page).to_have_url(re.compile(r"/accounts/login/"))
+class EventPermissionsTest(EventBaseTest):
+    """Tests relacionados con los permisos de usuario para diferentes funcionalidades"""
 
     def test_buttons_visible_only_for_organizer(self):
         """Test que verifica que los botones de gestión solo son visibles para organizadores"""
@@ -212,6 +197,10 @@ class EventE2ETest(StaticLiveServerTestCase):
         # Verificar que NO existe el botón de crear
         create_button = self.page.get_by_role("link", name="Crear Evento")
         expect(create_button).to_have_count(0)
+
+
+class EventCRUDTest(EventBaseTest):
+    """Tests relacionados con las operaciones CRUD (Crear, Leer, Actualizar, Eliminar) de eventos"""
 
     def test_create_new_event_organizer(self):
         """Test que verifica la funcionalidad de crear un nuevo evento para organizadores"""

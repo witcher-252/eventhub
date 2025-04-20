@@ -4,7 +4,9 @@ from django.urls import reverse
 from app.models import User
 
 
-class RegisterViewTest(TestCase):
+class RegisterViewBaseTest(TestCase):
+    """Clase base para las pruebas de registro"""
+
     def setUp(self):
         # Crear un cliente para realizar solicitudes
         self.client = Client()
@@ -22,11 +24,19 @@ class RegisterViewTest(TestCase):
             "password-confirm": "password123",
         }
 
+
+class RegisterViewLoadTest(RegisterViewBaseTest):
+    """Tests para cargar la vista de registro"""
+
     def test_register_page_loads(self):
         """Test que verifica que la página de registro carga correctamente"""
         response = self.client.get(self.register_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "accounts/register.html")
+
+
+class RegisterViewSuccessTest(RegisterViewBaseTest):
+    """Tests para registro exitoso"""
 
     def test_register_successful(self):
         """Test que verifica un registro exitoso"""
@@ -41,6 +51,10 @@ class RegisterViewTest(TestCase):
         # Verificar que el usuario está autenticado
         user = User.objects.get(username="nuevo_usuario")
         self.assertEqual(int(self.client.session["_auth_user_id"]), user.pk)
+
+
+class RegisterViewValidationTest(RegisterViewBaseTest):
+    """Tests para validación de errores en el registro"""
 
     def test_register_duplicate_email(self):
         """Test que verifica que no se puede registrar con un email existente"""
@@ -117,7 +131,9 @@ class RegisterViewTest(TestCase):
         self.assertEqual(response.context["errors"]["email"], "El email es requerido")
 
 
-class LoginViewTest(TestCase):
+class LoginViewBaseTest(TestCase):
+    """Clase base para las pruebas de login"""
+
     def setUp(self):
         # Crear un cliente para realizar solicitudes
         self.client = Client()
@@ -130,11 +146,19 @@ class LoginViewTest(TestCase):
         # Datos de login válidos
         self.valid_credentials = {"username": "usuario_test", "password": "password123"}
 
+
+class LoginViewLoadTest(LoginViewBaseTest):
+    """Tests para cargar la vista de login"""
+
     def test_login_page_loads(self):
         """Test que verifica que la página de login carga correctamente"""
         response = self.client.get(self.login_url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "accounts/login.html")
+
+
+class LoginViewSuccessTest(LoginViewBaseTest):
+    """Tests para login exitoso"""
 
     def test_login_successful(self):
         """Test que verifica un login exitoso"""
@@ -145,6 +169,10 @@ class LoginViewTest(TestCase):
 
         # Verificar que el usuario está autenticado
         self.assertEqual(int(self.client.session["_auth_user_id"]), self.test_user.pk)
+
+
+class LoginViewFailureTest(LoginViewBaseTest):
+    """Tests para fallos en el login"""
 
     def test_login_invalid_credentials(self):
         """Test que verifica que no se puede iniciar sesión con credenciales inválidas"""
