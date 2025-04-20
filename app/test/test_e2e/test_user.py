@@ -65,8 +65,8 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         # Enviar el formulario
         self.page.click("button[type='submit']")
 
-        # Verificar que se redirige al dashboard
-        self.page.wait_for_url(f"{self.live_server_url}/dashboard/*")
+        # Verificar que se redirige a events
+        self.page.wait_for_url(f"{self.live_server_url}/events/*")
 
         # Verificar que el usuario fue creado en la base de datos
         self.assertTrue(User.objects.filter(username="nuevo_usuario").exists())
@@ -85,8 +85,8 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         # Enviar el formulario
         self.page.click("button[type='submit']")
 
-        # Verificar que se redirige al dashboard
-        self.page.wait_for_url(f"{self.live_server_url}/dashboard/*")
+        # Verificar que se redirige a events
+        self.page.wait_for_url(f"{self.live_server_url}/events/*")
 
         # Verificar que el usuario fue creado en la base de datos
         self.assertTrue(User.objects.filter(username="nuevo_usuario").exists())
@@ -182,8 +182,8 @@ class AuthenticationE2ETest(StaticLiveServerTestCase):
         # Enviar el formulario
         self.page.click("button[type='submit']")
 
-        # Verificar que se redirige al dashboard
-        self.page.wait_for_url(f"{self.live_server_url}/dashboard/*")
+        # Verificar que se redirige a events
+        self.page.wait_for_url(f"{self.live_server_url}/events/*")
 
     def test_invalid_credentials_login(self):
         """Test que verifica el intento de login con credenciales inválidas"""

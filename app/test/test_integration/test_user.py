@@ -32,8 +32,8 @@ class RegisterViewTest(TestCase):
         """Test que verifica un registro exitoso"""
         response = self.client.post(self.register_url, self.valid_user_data)
 
-        # Verificar redirección al dashboard después del registro exitoso
-        self.assertRedirects(response, reverse("dashboard"))
+        # Verificar redirección a events después del registro exitoso
+        self.assertRedirects(response, reverse("events"))
 
         # Verificar que el usuario fue creado en la base de datos
         self.assertTrue(User.objects.filter(username="nuevo_usuario").exists())
@@ -140,8 +140,8 @@ class LoginViewTest(TestCase):
         """Test que verifica un login exitoso"""
         response = self.client.post(self.login_url, self.valid_credentials)
 
-        # Verificar redirección al dashboard después del login exitoso
-        self.assertRedirects(response, reverse("dashboard"))
+        # Verificar redirección a events después del login exitoso
+        self.assertRedirects(response, reverse("events"))
 
         # Verificar que el usuario está autenticado
         self.assertEqual(int(self.client.session["_auth_user_id"]), self.test_user.pk)
