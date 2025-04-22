@@ -7,6 +7,7 @@ Aplicación web para venta de entradas utilizada en la cursada 2025 de Ingenier�
 - Carina López
 - Cristian Ruben Ilundayn
 - Ruben Denis
+- Gerardo Celiz Maidana
 
 ## Dependencias
 
