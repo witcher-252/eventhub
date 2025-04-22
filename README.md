@@ -4,6 +4,7 @@ Aplicación web para venta de entradas utilizada en la cursada 2025 de Ingenier�
 
 ## Integrantes
 - Daniela Sol Bellingeri 
+- Carina López
 ## Dependencias
 
 - python 3
