@@ -1,4 +1,5 @@
 import datetime
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
@@ -125,3 +126,8 @@ def event_form(request, id=None):
         "app/event_form.html",
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
+
+# ---- Comments view ----
+
+def comment(request):
+    return render(request, "comments.html")
