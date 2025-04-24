@@ -3,5 +3,11 @@
 
 {% block content %}
     <h1>Página de comentarios</h1>
+    <ul>
+        {% for c in comments %}
+            <li>{{c.title}}</li>
+            
+        {% endfor %}
+    </ul>
 {% endblock %}
 

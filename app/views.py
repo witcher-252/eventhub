@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Event, User
+from .models import Comment, Event, User
 
 
 def register(request):
@@ -130,4 +130,5 @@ def event_form(request, id=None):
 # ---- Comments view ----
 
 def comment(request):
-    return render(request, "comments.html")
+    comment = Comment.objects.all()
+    return render(request, "comments.html", {"comments": comment})
