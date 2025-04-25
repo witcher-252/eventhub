@@ -39,6 +39,16 @@
                                title="Ver detalle">
                                 <i class="bi bi-eye" aria-hidden="true"></i>
                             </a>
+                             <!-- Botón Comentar -->
+                             {% if user.is_authenticated %}
+                             <a href="{% url 'comments' event.id %}"
+                                class="btn btn-sm btn-outline-success"
+                                title="Comentar"
+                                aria-label="Comentar">
+                                <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                            </a>
+
+                            {% endif %}
                             {% if user_is_organizer %}
                                 <a href="{% url 'event_edit' event.id %}"
                                     class="btn btn-sm btn-outline-secondary"

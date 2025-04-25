@@ -3,6 +3,7 @@ import datetime
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -130,12 +131,39 @@ def event_form(request, id=None):
 
 # ---- Comments view ----
 
-def comment(request):
-    comment = Comment.objects.all()
+@login_required
+def comment(request, event_id):
+    event = get_object_or_404(Event, pk=event_id)
+    comments = Comment.objects.filter(event=event).order_by("-created_at")
     
-    paginator = Paginator(comment, 20)  # 5 comentarios por página
-
+    paginator = Paginator(comments, 20)
     page_number = request.GET.get("page")
-    comments = paginator.get_page(page_number)
+    comments_page = paginator.get_page(page_number)
     
-    return render(request, "comments.html", {"comments": comments})
+    return render(request, "comments.html", {
+        "event": event,
+        "comments": comments_page
+    })
+
+
+def registrar_comentario(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        text = request.POST.get('text')
+        event_id = request.POST.get('event_id')
+
+        if not event_id:
+            # Manejar el error si el event_id no se proporciona
+            return HttpResponseBadRequest("No se ha proporcionado el ID del evento.")
+
+        event = get_object_or_404(Event, id=event_id)
+
+        Comment.objects.create(
+            title=title,
+            text=text,
+            user=request.user,
+            event=event
+        )
+
+        return redirect("comments", event_id=event.id) # type: ignore
+    return HttpResponseBadRequest("Método no permitido.")
