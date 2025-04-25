@@ -2,6 +2,7 @@ import datetime
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -131,4 +132,10 @@ def event_form(request, id=None):
 
 def comment(request):
     comment = Comment.objects.all()
-    return render(request, "comments.html", {"comments": comment})
+    
+    paginator = Paginator(comment, 20)  # 5 comentarios por página
+
+    page_number = request.GET.get("page")
+    comments = paginator.get_page(page_number)
+    
+    return render(request, "comments.html", {"comments": comments})
