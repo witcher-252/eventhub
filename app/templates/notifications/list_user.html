@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Notificaciones <span class="badge bg-danger">{{ unread_count }} nuevas</span></h2>
+
+{% for n in notifications %}
+    <div class="card mb-2 {% if not n.is_read %}bg-light{% endif %}">
+        <div class="card-body">
+            <h5 class="card-title">
+                🔔 {{ n.title }}
+                {% if not n.is_read %}<span class="badge bg-primary">Nueva</span>{% endif %}
+            </h5>
+            <p class="card-text">{{ n.message }}</p>
+            <small class="text-muted">{{ n.created_at|date:"d M Y, H:i" }}</small>
+            {% if n.event %}
+                <br><small class="text-muted">Evento relacionado: {{ n.event.title }}</small>
+            {% endif %}
+            {% if not n.is_read %}
+                <form method="post" action="{% url 'mark_as_read' n.id %}" class="d-inline float-end">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-primary">Marcar como leída</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}
+
+{% endblock %}

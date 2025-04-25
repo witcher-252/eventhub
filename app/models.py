@@ -73,3 +73,26 @@ class Event(models.Model):
         self.organizer = organizer or self.organizer
 
         self.save()
+
+
+class Notification(models.Model):
+    
+    PRIORITY_HIGH = 'HIGH'
+    PRIORITY_MEDIUM = 'MEDIUM'
+    PRIORITY_LOW = 'LOW'
+
+    PRIORITY_CHOICES = [
+        (PRIORITY_HIGH, 'Alta'),
+        (PRIORITY_MEDIUM, 'Media'),
+        (PRIORITY_LOW, 'Baja'),
+    ]
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
+    is_read = models.BooleanField(default=False)
+
+    event = models.ForeignKey("Event", on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    def __str__(self):
+        return self.title
