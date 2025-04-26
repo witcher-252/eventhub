@@ -73,3 +73,22 @@ class Event(models.Model):
         self.organizer = organizer or self.organizer
 
         self.save()
+
+class TicketType(models.TextChoices):
+        GENERAL = 'general', 'General'
+        VIP = 'VIP', 'VIP'
+
+class Ticket(models.Model):
+    # variables buy_date: date, ticket_code: string, quantity: integer, type : "general"| "VIP"
+    ticket_code = models.PositiveIntegerField(primary_key=True)
+    quantity = models.PositiveIntegerField()
+    buy_date = models.DateTimeField()
+    type = models.CharField(max_length=10, choices=TicketType.choices, default=TicketType.GENERAL,
+    )
+
+    def __str__(self):
+        texto = "{0} ({1})"
+        return texto.format(self.ticket_code, self.buy_date)    
+    
+     
+        
