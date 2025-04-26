@@ -73,3 +73,14 @@ class Event(models.Model):
         self.organizer = organizer or self.organizer
 
         self.save()
+class rating(models.Model):
+    # title: string, text: string, rating: integer, created_at: datetime
+    title = models.CharField(max_length=30)
+    text = models.CharField (max_length=250)
+    rating = models.PositiveIntegerField(max_length=5)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+def __str__(self):
+        texto = "{0} ({1})"
+        return texto.format(self.title, self.rating)
+
