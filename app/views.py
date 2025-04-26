@@ -125,3 +125,9 @@ def event_form(request, id=None):
         "app/event_form.html",
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
+# codigo de Rating - inicio
+def inicio_rating(request):
+    return render(request, "rating/inicioRating.html")
+
+
+#Codigo de Rating - Fin
