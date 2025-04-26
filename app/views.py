@@ -125,3 +125,10 @@ def event_form(request, id=None):
         "app/event_form.html",
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
+
+# codigo de ticket - inicio
+
+def gestion_ticket(request):
+    return render(request, "ticket/gestionTicket.html")
+
+# codigo de ticket - fin
