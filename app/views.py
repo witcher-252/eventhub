@@ -151,3 +151,15 @@ def refund_list(request):
         refunds = RefundRequest.objects.filter(user=request.user)
 
     return render(request, "refunds/refund_list.html", {"refunds": refunds, "user_is_organizer": user_is_organizer})
+
+@login_required
+def refund_edit(request, id):
+    refund = get_object_or_404(RefundRequest, pk=id, user=request.user)
+    if request.method == 'POST':
+        form = RefundRequestForm(request.POST, instance=refund)
+        if form.is_valid():
+            form.save()
+            return redirect('refund_list')
+    else:
+        form = RefundRequestForm(instance=refund)
+    return render(request, 'refunds/refund_edit.html', {'form': form})

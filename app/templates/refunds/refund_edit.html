@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Editar Solicitud de Devolución</h2>
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="id_ticket_code" class="form-label">Código de Ticket</label>
+            <input type="text" name="ticket_code" id="id_ticket_code" class="form-control" value="{{ form.ticket_code.value|default_if_none:'' }}">
+            {% if form.ticket_code.errors %}
+                <div class="text-danger">{{ form.ticket_code.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <label for="id_reason" class="form-label">Motivo</label>
+            <textarea name="reason" id="id_reason" class="form-control">{{ form.reason.value|default_if_none:'' }}</textarea>
+            {% if form.reason.errors %}
+                <div class="text-danger">{{ form.reason.errors }}</div>
+            {% endif %}
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            <a href="{% url 'refund_list' %}" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -23,6 +23,7 @@
                 <th>Fecha de Creación</th>
                 <th>Aprobado</th>
                 <th>Fecha de Respuesta</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -50,6 +51,18 @@
                     {% else %}
                         -
                     {% endif %}
+                </td>
+                
+                <td>
+                    <div class="hstack gap-1">
+                        {% if not user_is_organizer %}
+                            {% if not refund.approval_date %}
+                            <a href="{% url 'refund_edit' refund.id %}" class="btn btn-sm btn-outline-secondary" title="Editar" aria-label="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% empty %}
