@@ -175,3 +175,32 @@ def refund_delete(request, id):
         refund.delete()
         return redirect("refund_list")
     return redirect("refund_list")
+
+@login_required
+def refund_accept(request, id):
+    refund = get_object_or_404(RefundRequest, pk=id)
+
+    # Solo el organizador puede aprobar las devoluciones
+    if not request.user.is_organizer:
+        return redirect("refund_list")
+
+    refund.approved = True
+    refund.approval_date = timezone.now()  # Asignar fecha de aprobación
+    refund.save()
+
+    return redirect("refund_list")
+
+@login_required
+def refund_reject(request, id):
+    refund = get_object_or_404(RefundRequest, pk=id)
+
+    # Solo el organizador puede rechazar devoluciones
+    if not request.user.is_organizer:
+        return redirect("refund_list")
+
+    if request.method == "POST":
+        refund.approved = False
+        refund.approval_date = timezone.now()  # Registrar también la fecha del rechazo
+        refund.save()
+
+    return redirect("refund_list")

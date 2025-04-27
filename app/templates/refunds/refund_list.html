@@ -56,7 +56,22 @@
                 <td>
                     <div class="hstack gap-1">
                         {% if user_is_organizer %}
-                            
+                            {% if not refund.approval_date %}
+                                <form action="{% url 'refund_accept' refund.id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success"
+                                        title="Aceptar" aria-label="Aceptar">
+                                        <i class="bi bi-check2-circle"></i>
+                                    </button>
+                                </form>
+                                <form action="{% url 'refund_reject' refund.id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning"
+                                        title="Rechazar" aria-label="Rechazar">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
                             <form action="{% url 'refund_delete' refund.id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
                                 <button class="btn btn-sm btn-outline-danger"
@@ -66,19 +81,19 @@
                                 </button>
                             </form>
                         {% else %}
-                        {% if not refund.approval_date %}
-                        <a href="{% url 'refund_edit' refund.id %}" class="btn btn-sm btn-outline-secondary" title="Editar" aria-label="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        {% endif %}
-                        <form action="{% url 'refund_delete' refund.id %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button class="btn btn-sm btn-outline-danger"
-                                type="submit"
-                                title="Eliminar" aria-label="Eliminar">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                            {% if not refund.approval_date %}
+                            <a href="{% url 'refund_edit' refund.id %}" class="btn btn-sm btn-outline-secondary" title="Editar" aria-label="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% endif %}
+                            <form action="{% url 'refund_delete' refund.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-danger"
+                                    type="submit"
+                                    title="Eliminar" aria-label="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         {% endif %}
                     </div>
                 </td>
