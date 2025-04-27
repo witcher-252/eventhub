@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Event, User
+from .models import Event, User, Ticket
 
 
 def register(request):
@@ -129,6 +129,7 @@ def event_form(request, id=None):
 # codigo de ticket - inicio
 
 def gestion_ticket(request):
-    return render(request, "ticket/gestionTicket.html")
+    listaTickets = Ticket.objects.all()
+    return render(request, "ticket/gestionTicket.html", {"listaTickets": listaTickets})
 
 # codigo de ticket - fin
