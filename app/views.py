@@ -4,7 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Event, User
+from .models import Event, User, RefundRequest
+from .forms import RefundRequestForm
 
 
 def register(request):
@@ -125,3 +126,28 @@ def event_form(request, id=None):
         "app/event_form.html",
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
+
+@login_required
+def refund_create(request):
+    if request.method == "POST":
+        form = RefundRequestForm(request.POST)
+        if form.is_valid():
+            refund = form.save(commit=False)
+            refund.user = request.user  # Asociar con el usuario logueado
+            refund.save()
+            return redirect("refund_list")
+    else:
+        form = RefundRequestForm()
+
+    return render(request, "refunds/refund_form.html", {"form": form})
+
+@login_required
+def refund_list(request):
+    user_is_organizer = request.user.is_organizer
+
+    if user_is_organizer:
+        refunds = RefundRequest.objects.all()
+    else:
+        refunds = RefundRequest.objects.filter(user=request.user)
+
+    return render(request, "refunds/refund_list.html", {"refunds": refunds, "user_is_organizer": user_is_organizer})

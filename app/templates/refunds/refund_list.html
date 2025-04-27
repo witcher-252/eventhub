@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Solicitudes de Devolución</h1>
+        {% if not user_is_organizer %}
+            <a href="{% url 'refund_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-2"></i> Nueva solicitud
+            </a>
+        {% endif %}
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                {% if user_is_organizer %}
+                    <th>Usuario</th>
+                {% else %}
+                    <th>Código Ticket</th>
+                {% endif %}
+                <th>Motivo</th>
+                <th>Fecha de Creación</th>
+                <th>Aprobado</th>
+                <th>Fecha de Respuesta</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for refund in refunds %}
+            <tr>
+                {% if user_is_organizer %}
+                    <td>{{ refund.user.username }}</td>
+                {% else %}
+                    <td>{{ refund.ticket_code }}</td>
+                {% endif %}
+                <td>{{ refund.reason }}</td>
+                <td>{{ refund.created_at|date:"d/m/Y H:i" }}</td>
+                <td>
+                    {% if not refund.approval_date %}
+                        Pendiente
+                    {% elif refund.approved %}
+                        Sí
+                    {% else %}
+                        No
+                    {% endif %}
+                </td>
+                <td>
+                    {% if refund.approval_date %}
+                        {{ refund.approval_date|date:"d/m/Y" }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No hay solicitudes aún.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
