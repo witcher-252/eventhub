@@ -3,34 +3,63 @@
 {% block title %}Eventos{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Tickets</h1>
+<div class="container"> 
+    <div class="row">
 
-        <h2> Listado de tickets</h2>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Codigo</th>
-                        <th>cantidad</th>
-                        <th>fecha de compra</th>
-                        <th>Tipo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for t in listaTickets %}
-                    <tr>
-                        <td>{{ t.ticket_code }}</td>
-                        <td>{{ t.quantity }}</td>
-                        <td>{{ t.buy_date }}</td>
-                        <td>{{ t.type }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
+            <div class="card-body">
+                <h5 class="card-title">Agregar Ticket</h5>
+                
+
+                <form action="/tickets/crearTicket" method="POST">{% csrf_token %}
+
+                    <label class="form-label">Ingrese la cantidad</label>
+                    <div class="form-group">
+                        <input type="number" id="cantidadTk" name="cantidadTk">
+                    </div>
+                    
+                    <label class="form-label">Selecciono el tipo de Entrada</label>
+                    <div class="form-group">
+                        <select class="form-select" id="tipoEntrada" name="tipoEntrada">
+                            <option value="general">general</option>
+                            <option value="VIP">VIP</option>
+                          </select>
+                    </div>
+                    <div class="form-group">
+                    <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                </div>
+                </form>
+              </div>
+        </div>
+
+
+        <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Codigo</th>
+                            <th>cantidad</th>
+                            <th>fecha de compra</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for t in listaTickets %}
+                        <tr>
+                            <td>{{ t.ticket_code }}</td>
+                            <td>{{ t.quantity }}</td>
+                            <td>{{ t.buy_date }}</td>
+                            <td>{{ t.type }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+    
+
+
         </div>
     </div>
-
 </div>
 {% endblock %}

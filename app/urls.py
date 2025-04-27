@@ -17,4 +17,5 @@ urlpatterns = [
 
     # urls de ticket
     path('tickets/', views.gestion_ticket, name='gestion_ticket'),
+    path('tickets/crearTicket', views.create_ticket, name='create_ticket'),
 ]

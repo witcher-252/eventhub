@@ -132,4 +132,11 @@ def gestion_ticket(request):
     listaTickets = Ticket.objects.all()
     return render(request, "ticket/gestionTicket.html", {"listaTickets": listaTickets})
 
+def create_ticket(request):
+    tipo = request.POST['tipoEntrada']
+    cantidad = request.POST['cantidadTk']
+    
+    Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo)
+    return redirect("/tickets")
+
 # codigo de ticket - fin
