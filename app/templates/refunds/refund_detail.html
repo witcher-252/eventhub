@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Detalle de Solicitud de Reembolso</h2>
+
+    <div class="card shadow-sm p-4">
+        <div class="mb-3">
+            <strong>Solicitante:</strong> {{ refund.user.username }}
+        </div>
+        
+        <div class="mb-3">
+            <strong>Código de Ticket:</strong> {{ refund.ticket_code }}
+        </div>
+
+        <div class="mb-3">
+            <strong>Motivo:</strong> {{ refund.reason }}
+        </div>
+
+        {% if refund.details %}
+        <div class="mb-3">
+            <strong>Detalles adicionales:</strong> {{ refund.details }}
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <strong>Fecha de Solicitud:</strong> {{ refund.created_at|date:"d/m/Y H:i" }}
+        </div>
+
+        <div class="mb-3">
+            <strong>Fecha de Respuesta:</strong> 
+            {% if refund.approval_date %}
+                {{ refund.approval_date|date:"d/m/Y" }}
+            {% else %}
+                -
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            <strong>Estado:</strong> 
+            {% if not refund.approval_date %}
+                <span class="badge bg-warning text-dark">Pendiente</span>
+            {% elif refund.approved %}
+                <span class="badge bg-success">Aprobado</span>
+            {% else %}
+                <span class="badge bg-danger">Rechazado</span>
+            {% endif %}
+        </div>
+
+        <div class="text-center mt-4">
+            <a href="{% url 'refund_list' %}" class="btn btn-secondary">Volver al listado</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

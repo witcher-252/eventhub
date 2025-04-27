@@ -3,94 +3,81 @@
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Solicitudes de Reembolsos</h1>
+        <h1>Solicitudes de Reembolso</h1>
         {% if not user_is_organizer %}
-            <a href="{% url 'refund_create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-2"></i> Nueva solicitud
-            </a>
+            <a href="{% url 'refund_create' %}" class="btn btn-primary">Nueva Solicitud</a>
         {% endif %}
     </div>
 
     <table class="table">
         <thead>
             <tr>
+                <th>Código de Entrada</th>
+                <th>Evento</th>
                 {% if user_is_organizer %}
-                    <th>Usuario</th>
-                {% else %}
-                    <th>Código Ticket</th>
+                    <th>Solicitante</th>
                 {% endif %}
-                <th>Motivo</th>
-                <th>Fecha de Creación</th>
-                <th>Aprobado</th>
-                <th>Fecha de Respuesta</th>
+                <th>Fecha de Solicitud</th>
+                <th>Estado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             {% for refund in refunds %}
             <tr>
+                <td><a href="{% url 'refund_detail' refund.id %}">{{ refund.ticket_code }}</a></td>
+                <td>{{ refund.ticket.event_name }}</td>
                 {% if user_is_organizer %}
                     <td>{{ refund.user.username }}</td>
-                {% else %}
-                    <td>{{ refund.ticket_code }}</td>
                 {% endif %}
-                <td>{{ refund.reason }}</td>
-                <td>{{ refund.created_at|date:"d/m/Y H:i" }}</td>
+                <td>{{ refund.created_at|date:"d M Y, H:i" }}</td>
                 <td>
                     {% if not refund.approval_date %}
-                        Pendiente
+                        <span class="badge bg-warning text-dark">Pendiente</span>
                     {% elif refund.approved %}
-                        Sí
+                        <span class="badge bg-success">Aprobado</span>
                     {% else %}
-                        No
+                        <span class="badge bg-danger">Rechazado</span>
                     {% endif %}
                 </td>
-                <td>
-                    {% if refund.approval_date %}
-                        {{ refund.approval_date|date:"d/m/Y" }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                
                 <td>
                     <div class="hstack gap-1">
                         {% if user_is_organizer %}
+                            <a href="{% url 'refund_detail' refund.id %}" class="btn btn-sm btn-outline-primary" title="Ver detalle" aria-label="Ver detalle">
+                                <i class="bi bi-eye"></i>
+                            </a>
                             {% if not refund.approval_date %}
                                 <form action="{% url 'refund_accept' refund.id %}" method="post" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-success"
-                                        title="Aceptar" aria-label="Aceptar">
-                                        <i class="bi bi-check2-circle"></i>
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Aceptar" aria-label="Aceptar">
+                                        <i class="bi bi-check"></i>
                                     </button>
                                 </form>
                                 <form action="{% url 'refund_reject' refund.id %}" method="post" style="display:inline;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-sm btn-outline-warning"
-                                        title="Rechazar" aria-label="Rechazar">
-                                        <i class="bi bi-x-circle"></i>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Rechazar" aria-label="Rechazar">
+                                        <i class="bi bi-x"></i>
                                     </button>
                                 </form>
                             {% endif %}
                             <form action="{% url 'refund_delete' refund.id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
-                                <button class="btn btn-sm btn-outline-danger"
-                                    type="submit"
-                                    title="Eliminar" aria-label="Eliminar">
+                                <button class="btn btn-sm btn-outline-dark" type="submit" title="Eliminar" aria-label="Eliminar">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
                         {% else %}
-                            {% if not refund.approval_date %}
-                            <a href="{% url 'refund_edit' refund.id %}" class="btn btn-sm btn-outline-secondary" title="Editar" aria-label="Editar">
-                                <i class="bi bi-pencil"></i>
+                            <a href="{% url 'refund_detail' refund.id %}" class="btn btn-sm btn-outline-primary" title="Ver detalle" aria-label="Ver detalle">
+                                <i class="bi bi-eye"></i>
                             </a>
+                            {% if not refund.approval_date %}
+                                <a href="{% url 'refund_edit' refund.id %}" class="btn btn-sm btn-outline-secondary" title="Editar" aria-label="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                             {% endif %}
                             <form action="{% url 'refund_delete' refund.id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
-                                <button class="btn btn-sm btn-outline-danger"
-                                    type="submit"
-                                    title="Eliminar" aria-label="Eliminar">
+                                <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar" aria-label="Eliminar">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
@@ -100,10 +87,11 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6" class="text-center">No hay solicitudes aún.</td>
+                <td colspan="{% if user_is_organizer %}6{% else %}5{% endif %}" class="text-center">No hay solicitudes aún.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    
 </div>
 {% endblock %}

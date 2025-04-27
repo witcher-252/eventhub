@@ -19,5 +19,6 @@ urlpatterns = [
     path('refunds/<int:id>/delete/', views.refund_delete, name='refund_delete'),
     path('refund/<int:id>/accept/', views.refund_accept, name='refund_accept'),
     path('refund/<int:id>/reject/', views.refund_reject, name='refund_reject'),
+    path('refund/<int:id>/', views.refund_detail, name='refund_detail'),
 
 ]

@@ -204,3 +204,21 @@ def refund_reject(request, id):
         refund.save()
 
     return redirect("refund_list")
+
+@login_required
+def refund_detail(request, id):
+    refund = get_object_or_404(RefundRequest, pk=id, user=request.user)
+    return render(request, "refunds/refund_detail.html", {"refund": refund})
+
+@login_required
+def refund_detail(request, id):
+    refund = get_object_or_404(RefundRequest, id=id)
+
+    user_is_organizer = request.user.is_organizer
+
+    if not user_is_organizer and refund.user != request.user:
+        return redirect('refund_list')
+
+    return render(request, "refunds/refund_detail.html", {"refund": refund})
+
+
