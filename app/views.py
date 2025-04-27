@@ -163,3 +163,15 @@ def refund_edit(request, id):
     else:
         form = RefundRequestForm(instance=refund)
     return render(request, 'refunds/refund_edit.html', {'form': form})
+
+@login_required
+def refund_delete(request, id):
+    if request.user.is_organizer:
+        refund = get_object_or_404(RefundRequest, pk=id)
+    else:
+        refund = get_object_or_404(RefundRequest, pk=id, user=request.user)
+    
+    if request.method == "POST":
+        refund.delete()
+        return redirect("refund_list")
+    return redirect("refund_list")
