@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Event, User
+from .models import Event, User, Rating
 
 
 def register(request):
@@ -127,7 +127,7 @@ def event_form(request, id=None):
     )
 # codigo de Rating - inicio
 def inicio_rating(request):
-    return render(request, "rating/inicioRating.html")
-
+    listaRating = Rating.objects.all()
+    return render(request, "rating/inicioRating.html", {"listaRating": listaRating})
 
 #Codigo de Rating - Fin
