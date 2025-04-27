@@ -73,3 +73,14 @@ class Event(models.Model):
         self.organizer = organizer or self.organizer
 
         self.save()
+
+class RefundRequest(models.Model):
+    ticket_code = models.CharField(max_length=100)
+    reason = models.TextField()
+    approved = models.BooleanField(default=False)
+    approval_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Solicitud de devolución para el ticket {self.ticket_code} por {self.user.username}"
