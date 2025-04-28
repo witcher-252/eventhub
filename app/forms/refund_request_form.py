@@ -20,6 +20,8 @@ class RefundRequestForm(forms.ModelForm):
     # Validación para 'reason'
     def clean_reason(self):
         reason = self.cleaned_data.get('reason')
+        if not reason:
+            raise forms.ValidationError("El motivo no puede estar vacío.")
         if len(reason) < 10:
             raise forms.ValidationError("El motivo debe tener al menos 10 caracteres.")
         return reason

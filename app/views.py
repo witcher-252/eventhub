@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .models import Event, User, RefundRequest
-from .forms.refund_request_form import RefundRequestForm
+from .forms import RefundRequestForm
 
 
 def register(request):
@@ -210,12 +210,6 @@ def refund_reject(request, id):
         refund.save()
 
     return redirect("refund_list")
-
-
-@login_required
-def refund_detail(request, id):
-    refund = get_object_or_404(RefundRequest, pk=id, user=request.user)
-    return render(request, "refunds/refund_detail.html", {"refund": refund})
 
 
 @login_required
