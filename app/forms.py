@@ -29,3 +29,23 @@ class NotificationForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['user'].label = "Selecciona un usuario"
         self.fields['user'].widget.attrs.update({'class': 'form-select'})
+    
+    def clean_title(self):
+        title = self.cleaned_data.get('title')
+        if title and len(title.strip()) < 5:
+            raise forms.ValidationError("El título debe tener al menos 5 caracteres.")
+        return title
+
+    def clean_message(self):
+        message = self.cleaned_data.get('message')
+        if not message or message.strip() == "":
+            raise forms.ValidationError("El mensaje no puede estar vacío.")
+        return message
+
+    def clean(self):
+        cleaned_data = super().clean()
+        destinatario_tipo = cleaned_data.get('destinatario_tipo')
+        user = cleaned_data.get('user')
+
+        if destinatario_tipo == 'usuario' and not user:
+            raise forms.ValidationError("Debes seleccionar un usuario específico si el destinatario es 'usuario'.")    
