@@ -1,5 +1,5 @@
 from django import forms
-from .models import RefundRequest
+from ..models import RefundRequest
 
 class RefundRequestForm(forms.ModelForm):
     class Meta:
@@ -15,7 +15,6 @@ class RefundRequestForm(forms.ModelForm):
         ticket_code = self.cleaned_data.get('ticket_code')
         if not ticket_code:
             raise forms.ValidationError("El código de ticket no puede estar vacío.")
-        # Si quieres más validaciones, como asegurarte que el código sea único, puedes agregarlo aquí
         return ticket_code
 
     # Validación para 'reason'

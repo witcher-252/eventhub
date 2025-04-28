@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .models import Event, User, RefundRequest
-from .forms import RefundRequestForm
+from .forms.refund_request_form import RefundRequestForm
 
 
 def register(request):
@@ -127,6 +127,7 @@ def event_form(request, id=None):
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
 
+
 @login_required
 def refund_create(request):
     if request.method == "POST":
@@ -141,6 +142,7 @@ def refund_create(request):
 
     return render(request, "refunds/refund_form.html", {"form": form})
 
+
 @login_required
 def refund_list(request):
     user_is_organizer = request.user.is_organizer
@@ -151,6 +153,7 @@ def refund_list(request):
         refunds = RefundRequest.objects.filter(user=request.user)
 
     return render(request, "refunds/refund_list.html", {"refunds": refunds, "user_is_organizer": user_is_organizer})
+
 
 @login_required
 def refund_edit(request, id):
@@ -164,6 +167,7 @@ def refund_edit(request, id):
         form = RefundRequestForm(instance=refund)
     return render(request, 'refunds/refund_edit.html', {'form': form})
 
+
 @login_required
 def refund_delete(request, id):
     if request.user.is_organizer:
@@ -175,6 +179,7 @@ def refund_delete(request, id):
         refund.delete()
         return redirect("refund_list")
     return redirect("refund_list")
+
 
 @login_required
 def refund_accept(request, id):
@@ -189,6 +194,7 @@ def refund_accept(request, id):
     refund.save()
 
     return redirect("refund_list")
+
 
 @login_required
 def refund_reject(request, id):
@@ -205,10 +211,12 @@ def refund_reject(request, id):
 
     return redirect("refund_list")
 
+
 @login_required
 def refund_detail(request, id):
     refund = get_object_or_404(RefundRequest, pk=id, user=request.user)
     return render(request, "refunds/refund_detail.html", {"refund": refund})
+
 
 @login_required
 def refund_detail(request, id):
