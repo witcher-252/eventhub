@@ -3,34 +3,69 @@
 {% block title %}Eventos{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Rating</h1>
 
-        <h2> Listado de Calificaciones</h2>
-        <div class="table-responsive">
-            <table class="table table-striped table-bordered table-hover">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Titulo</th>
-                        <th>Comentario</th>
-                        <th>Puntuacion</th>
-                        <th>Fecha</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for r in listaRating %}
-                    <tr>
-                        <td>{{ r.title    }}</td>
-                        <td>{{ r.text }}</td>
-                        <td>{{ r.rating }}</td>
-                        <td>{{ r.created_at }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
+            <div class="card-body">
+                <h5 class="card-title">Agregar Calificación</h5>
+                
+
+                <form action="/rating/crearRating" method="POST">{% csrf_token %}
+
+                    <label class="form-label">Ingrese Título</label>
+                    <div class="form-group">
+                        <input type="text" id="tituloR" name="tituloR">
+                    </div>
+
+                    <label class="form-label">Ingrese Descripción</label>
+                    <div class="form-group">
+                        <input type="text" id="descripcionR" name="descripcionR">
+                    </div>
+
+                    <label class="form-label">Califique</label>
+                    <div class="form-group">
+                        <input type="number" id="califiqueR" name="califiqueR" min="1" max="5" value="1"> 
+                    </div>
+                    
+                    <div class="form-group">
+                    <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                </div>
+                </form>
+              </div>
+            
+        </div>
+        <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Titulo</th>
+                            <th>Comentario</th>
+                            <th>Puntuacion</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in listaRating %}
+                        <tr>
+                            <td>{{ r.title }}</td>
+                            <td>{{ r.text }}</td>
+                            <td>{% for _ in r.full_stars %}
+                                <i class="bi bi-star-fill" style="color: gold;"></i>
+                                {% endfor %}
+                                {% for _ in r.empty_stars %}
+                                <i class="bi bi-star" style="color: gold;"></i>
+                                {% endfor %}
+                            </td>
+                            <td>{{ r.created_at|date:"d F Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-
+</div>
 </div>
 {% endblock %}

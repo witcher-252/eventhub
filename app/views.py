@@ -128,6 +128,19 @@ def event_form(request, id=None):
 # codigo de Rating - inicio
 def inicio_rating(request):
     listaRating = Rating.objects.all()
+
+    for r in listaRating:
+        r.full_stars = range(r.rating)
+        r.empty_stars = range(5 - r.rating)
+
     return render(request, "rating/inicioRating.html", {"listaRating": listaRating})
+
+def formulario_rating(request):
+    titulo = request.POST['tituloR']
+    descripcion = request.POST['descripcionR']
+    rating = request.POST['califiqueR']
+    
+    Rating.objects.create( title=titulo , text=descripcion, rating=rating)
+    return redirect("/rating")
 
 #Codigo de Rating - Fin

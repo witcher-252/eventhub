@@ -15,4 +15,6 @@ urlpatterns = [
     path("events/<int:id>/delete/", views.event_delete, name="event_delete"),
     # url rating-----------------------
     path("rating/", views.inicio_rating, name="inicio_rating"),
+    # url formulario
+    path("rating/crearRating", views.formulario_rating, name="formulario_rating"),
 ]

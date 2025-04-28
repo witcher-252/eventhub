@@ -76,6 +76,7 @@ class Event(models.Model):
         self.save()
 class Rating(models.Model):
     # title: string, text: string, rating: integer, created_at: datetime
+    id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=30)
     text = models.CharField (max_length=250)
     rating = models.PositiveSmallIntegerField(
