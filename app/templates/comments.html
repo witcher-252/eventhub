@@ -40,6 +40,7 @@
                             <th>Título</th>
                             <th>Comentario</th>
                             <th>Fecha</th>
+                            <th colspan="2">Opciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,6 +49,10 @@
                             <td>{{ c.title }}</td>
                             <td>{{ c.text }}</td>
                             <td>{{ c.created_at|date:"d/m/Y H:i" }}</td>
+                            <th><a href="editComment/{{c.id}}" class="btn btn-info">Editar</a></th>
+                            <th>
+                                <a href="{% url 'delete_comment' event.id c.id %}" class="btn btn-danger">Eliminar</a>
+                            </th>
                         </tr>
                         {% empty %}
                         <tr>

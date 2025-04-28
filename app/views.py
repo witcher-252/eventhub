@@ -1,9 +1,10 @@
 import datetime
 
+from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -167,3 +168,34 @@ def registrar_comentario(request):
 
         return redirect("comments", event_id=event.id) # type: ignore
     return HttpResponseBadRequest("Método no permitido.")
+
+
+def delete_comment(request, event_id, id):
+    comment = get_object_or_404(Comment, id=id)
+    
+    # Verificar si el comentario pertenece al usuario logueado
+    if comment.user != request.user:
+        return HttpResponseForbidden("No tienes permiso para eliminar este comentario")
+    
+    # Eliminar el comentario
+    comment.delete()
+
+    # Redirigir al evento después de eliminar el comentario
+    messages.success(request, "Comentario eliminado con éxito.")
+    return redirect('comments', event_id=event_id)
+
+
+@login_required
+def edit_comment(request, id):
+    comment = get_object_or_404(Comment, id=id)
+
+    if comment.user != request.user:
+        return HttpResponseForbidden("No tenés permiso para editar este comentario.")
+
+    if request.method == "POST":
+        comment.title = request.POST.get('title')
+        comment.text = request.POST.get('text')
+        comment.save()
+        return redirect("comments", event_id=comment.event.id) # type: ignore
+
+    return render(request, "edit_comment.html", {"comment": comment})
