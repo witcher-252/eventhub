@@ -9,6 +9,8 @@
             <h4>Gestión de comentarios</h4>
             <div class="card">
                 <div class="card-body">
+                    {% if not request.user.is_organizer %}
+                    <!-- Solo los usuarios regulares pueden ver el formulario de creación de comentarios -->
                     <form action="{% url 'registrar_comentario' %}" method="POST">
                         {% csrf_token %}
                         <!--Campo oculto con el ID del evento que se comenta -->
@@ -19,12 +21,15 @@
                         </div>
                         <div class="form-group py-2">
                             <textarea name="text" rows="4" class="form-control" placeholder="Escribí tu comentario aquí..." required></textarea>
-
                         </div>
                         <div class="form-group py-4">
                             <button type="submit" class="btn btn-success btn-black text-white">Guardar</button>
                         </div>
                     </form>
+                    {% else %}
+                    <!-- Mensaje de solo lectura para el organizador -->
+                    <p>Los organizadores no pueden crear comentarios.</p>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -49,11 +54,51 @@
                             <td>{{ c.title }}</td>
                             <td>{{ c.text }}</td>
                             <td>{{ c.created_at|date:"d/m/Y H:i" }}</td>
-                            <th><a href="editComment/{{c.id}}" class="btn btn-info">Editar</a></th>
                             <th>
-                                <a href="{% url 'delete_comment' event.id c.id %}" class="btn btn-danger">Eliminar</a>
+                                {% if c.user == request.user and not request.user.is_organizer %}
+                                    <!-- Botón que abre el modal solo si el usuario es dueño del comentario y no es organizador -->
+                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editCommentModal{{ c.id }}">
+                                        Editar
+                                    </button>
+                                {% endif %}
+                            </th>
+                            <th>
+                                {% if c.user == request.user or request.user.is_organizer %}
+                                    <!-- Eliminar comentario está permitido solo si el comentario es del usuario logueado o si el usuario es organizador -->
+                                    <a href="{% url 'delete_comment' event.id c.id %}" class="btn btn-danger">Eliminar</a>
+                                {% endif %}
                             </th>
                         </tr>
+
+                        <!-- Modal para editar comentario -->
+                        <div class="modal fade" id="editCommentModal{{ c.id }}" tabindex="-1" aria-labelledby="editCommentModalLabel{{ c.id }}" aria-hidden="true">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <form method="POST" action="{% url 'edit_comment' event.id c.id %}">
+                                {% csrf_token %}
+                                <div class="modal-header">
+                                  <h5 class="modal-title" id="editCommentModalLabel{{ c.id }}">Editar Comentario</h5>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                </div>
+                                <div class="modal-body">
+                                  <div class="mb-3">
+                                    <label for="title{{ c.id }}" class="form-label">Título</label>
+                                    <input type="text" class="form-control" id="title{{ c.id }}" name="title" value="{{ c.title }}">
+                                  </div>
+                                  <div class="mb-3">
+                                    <label for="text{{ c.id }}" class="form-label">Texto</label>
+                                    <textarea class="form-control" id="text{{ c.id }}" name="text" rows="3">{{ c.text }}</textarea>
+                                  </div>
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                  <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                                </div>
+                              </form>
+                            </div>
+                          </div>
+                        </div>
+
                         {% empty %}
                         <tr>
                             <td colspan="3" class="text-center">No hay comentarios disponibles.</td>
@@ -103,3 +148,6 @@
     </div>
 </div>
 {% endblock %}
+
+
+

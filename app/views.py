@@ -170,24 +170,22 @@ def registrar_comentario(request):
     return HttpResponseBadRequest("Método no permitido.")
 
 
+@login_required
 def delete_comment(request, event_id, id):
-    comment = get_object_or_404(Comment, id=id)
-    
-    # Verificar si el comentario pertenece al usuario logueado
-    if comment.user != request.user:
-        return HttpResponseForbidden("No tienes permiso para eliminar este comentario")
-    
-    # Eliminar el comentario
-    comment.delete()
+    comment = get_object_or_404(Comment, id=id, event_id=event_id)
 
-    # Redirigir al evento después de eliminar el comentario
+    # Un usuario común puede eliminar su comentario; un organizador puede eliminar cualquier comentario
+    if not (request.user == comment.user or request.user.is_organizer):
+        return HttpResponseForbidden("No tenés permiso para eliminar este comentario.")
+
+    comment.delete()
     messages.success(request, "Comentario eliminado con éxito.")
-    return redirect('comments', event_id=event_id)
+    return redirect("comments", event_id=event_id)
 
 
 @login_required
-def edit_comment(request, id):
-    comment = get_object_or_404(Comment, id=id)
+def edit_comment(request, event_id, id):
+    comment = get_object_or_404(Comment, id=id, event_id=event_id)
 
     if comment.user != request.user:
         return HttpResponseForbidden("No tenés permiso para editar este comentario.")
@@ -196,6 +194,5 @@ def edit_comment(request, id):
         comment.title = request.POST.get('title')
         comment.text = request.POST.get('text')
         comment.save()
-        return redirect("comments", event_id=comment.event.id) # type: ignore
 
-    return render(request, "edit_comment.html", {"comment": comment})
+    return redirect("comments", event_id=event_id)
