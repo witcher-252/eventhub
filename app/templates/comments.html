@@ -13,9 +13,7 @@
                     <!-- Solo los usuarios regulares pueden ver el formulario de creación de comentarios -->
                     <form action="{% url 'registrar_comentario' %}" method="POST">
                         {% csrf_token %}
-                        <!--Campo oculto con el ID del evento que se comenta -->
                         <input type="hidden" name="event_id" value="{{ event.id }}">
-
                         <div class="form-group">
                             <input type="text" id="title" name="title" class="form-control" placeholder="titulo" minlength="3" required>
                         </div>
@@ -27,7 +25,6 @@
                         </div>
                     </form>
                     {% else %}
-                    <!-- Mensaje de solo lectura para el organizador -->
                     <p>Los organizadores no pueden crear comentarios.</p>
                     {% endif %}
                 </div>
@@ -37,7 +34,7 @@
         <!-- Columna derecha para la tabla -->
         <div class="col-md-8">
             <h1 class="text-center mb-4">Lista de comentarios</h1>
-            
+
             <div class="table-responsive">
                 <table class="table table-striped table-bordered">
                     <thead class="table-dark">
@@ -54,23 +51,24 @@
                             <td>{{ c.title }}</td>
                             <td>{{ c.text }}</td>
                             <td>{{ c.created_at|date:"d/m/Y H:i" }}</td>
-                            <th>
-                                {% if c.user == request.user and not request.user.is_organizer %}
-                                    <!-- Botón que abre el modal solo si el usuario es dueño del comentario y no es organizador -->
-                                    <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editCommentModal{{ c.id }}">
-                                        Editar
-                                    </button>
+                            <td>
+                                {% if c.user == request.user %}
+                                <!-- Botón de editar solo para el propietario del comentario -->
+                                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#editCommentModal{{ c.id }}">
+                                    Editar
+                                </button>
                                 {% endif %}
-                            </th>
-                            <th>
+                            </td>
+                            <td>
                                 {% if c.user == request.user or request.user.is_organizer %}
-                                    <!-- Eliminar comentario está permitido solo si el comentario es del usuario logueado o si el usuario es organizador -->
-                                    <a href="{% url 'delete_comment' event.id c.id %}" class="btn btn-danger">Eliminar</a>
+                                <!-- Botón de eliminar para el propietario o el organizador -->
+                                <a href="{% url 'delete_comment' event.id c.id %}" class="btn btn-danger">Eliminar</a>
                                 {% endif %}
-                            </th>
+                            </td>
                         </tr>
 
-                        <!-- Modal para editar comentario -->
+                        {% if c.user == request.user %}
+                        <!-- Modal solo se incluye si el usuario es el autor del comentario -->
                         <div class="modal fade" id="editCommentModal{{ c.id }}" tabindex="-1" aria-labelledby="editCommentModalLabel{{ c.id }}" aria-hidden="true">
                           <div class="modal-dialog">
                             <div class="modal-content">
@@ -98,10 +96,11 @@
                             </div>
                           </div>
                         </div>
+                        {% endif %}
 
                         {% empty %}
                         <tr>
-                            <td colspan="3" class="text-center">No hay comentarios disponibles.</td>
+                            <td colspan="5" class="text-center">No hay comentarios disponibles.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -148,6 +147,3 @@
     </div>
 </div>
 {% endblock %}
-
-
-

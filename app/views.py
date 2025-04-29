@@ -146,7 +146,7 @@ def comment(request, event_id):
         "comments": comments_page
     })
 
-
+@login_required
 def registrar_comentario(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -184,15 +184,26 @@ def delete_comment(request, event_id, id):
 
 
 @login_required
-def edit_comment(request, event_id, id):
-    comment = get_object_or_404(Comment, id=id, event_id=event_id)
+def edit_comment(request, event_id, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, event__id=event_id)
 
-    if comment.user != request.user:
-        return HttpResponseForbidden("No tenés permiso para editar este comentario.")
+    # Solo el autor del comentario puede editarlo, siempre que NO sea organizador
+    if request.user.is_organizer or request.user != comment.user:
+        messages.error(request, "No tienes permiso para editar este comentario.")
+        return redirect('comments', event_id=event_id)
 
-    if request.method == "POST":
-        comment.title = request.POST.get('title')
-        comment.text = request.POST.get('text')
-        comment.save()
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        text = request.POST.get('text')
 
-    return redirect("comments", event_id=event_id)
+        if title and text:
+            comment.title = title
+            comment.text = text
+            comment.save()
+            messages.success(request, "Comentario actualizado correctamente.")
+        else:
+            messages.error(request, "Ambos campos son obligatorios.")
+
+        return redirect('comments', event_id=event_id)
+
+    return redirect('comments', event_id=event_id)
