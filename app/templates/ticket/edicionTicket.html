@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Tickets{% endblock %}
+
+{% block content %}
+<div class="container"> 
+    <div class="row">
+
+        <div class="col-md-4 offset-md-4">
+            <div class="card-body">
+                <h5 class="card-title">Modificar Ticket</h5>
+                
+
+                <form action="/tickets/update" method="POST">{% csrf_token %}
+
+                    <label class="form-label">Codigo de ticket</label>
+                    <div class="form-group">
+                        <input type="number" value={{ticket.ticket_code}} id="ticketCode" name="ticketCode" readonly>
+                    </div>
+
+                    <label class="form-label">Fecha de compra</label>
+                    <div class="form-group">
+                        <input type="datetime-local" id="buy_date" name="buy_date" value="{{ ticket.buy_date|date:'Y-m-d\\TH:i' }}" class="form-control" readonly>
+                    </div>
+
+                    <label class="form-label">Ingrese la cantidad</label>
+                    <div class="form-group">
+                        <input type="number" value={{ticket.quantity}} id="cantidadTk" name="cantidadTk">
+                    </div>
+                    
+                    <label class="form-label">Selecciono el tipo de Entrada</label>
+                    <div class="form-group">
+                        <select class="form-select" id="tipoEntrada" name="tipoEntrada">
+                            <option value="general" {% if ticket.type == 'general' %} selected {% endif %}>general</option>
+                            <option value="VIP"{% if ticket.type == 'VIP' %} selected {% endif %}>VIP</option>
+                          </select>
+                    </div>
+                    <div class="form-group">
+                    <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                </div>
+                </form>
+              </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

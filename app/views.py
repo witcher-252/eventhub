@@ -139,4 +139,25 @@ def create_ticket(request):
     Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo)
     return redirect("/tickets")
 
+def delete_ticket(request, id):
+    tk = get_object_or_404(Ticket, ticket_code=id)
+    tk.delete()
+    return redirect("/tickets")
+
+def edit_ticket(request, id):
+    tk = get_object_or_404(Ticket, ticket_code=id)
+    return render(request, "ticket/edicionTicket.html",{"ticket":tk})
+
+def update_ticket(request):
+    
+    tipo = request.POST['tipoEntrada']
+    cantidad = request.POST['cantidadTk']
+    id = request.POST['ticketCode']
+    
+    tk = get_object_or_404(Ticket, ticket_code=id)
+    tk.quantity = cantidad
+    tk.type = tipo
+
+    tk.save()
+    return redirect("/tickets")
 # codigo de ticket - fin

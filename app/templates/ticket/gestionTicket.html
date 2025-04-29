@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Eventos{% endblock %}
+{% block title %}Tickets{% endblock %}
 
 {% block content %}
 <div class="container"> 
@@ -42,6 +42,8 @@
                             <th>cantidad</th>
                             <th>fecha de compra</th>
                             <th>Tipo</th>
+                            <th>Modificar</th>
+                            <th>Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -51,6 +53,12 @@
                             <td>{{ t.quantity }}</td>
                             <td>{{ t.buy_date }}</td>
                             <td>{{ t.type }}</td>
+                            <td align="center"><a href="editar/{{t.ticket_code}}" class="btn btn-info"  title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                              </a></td>
+                              <td align="center"><a href="eliminar/{{t.ticket_code}}" class="btn btn-danger" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                              </a></td>
                         </tr>
                         {% endfor %}
                     </tbody>
