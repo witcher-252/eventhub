@@ -128,36 +128,46 @@ def event_form(request, id=None):
 
 # codigo de ticket - inicio
 
+@login_required
 def gestion_ticket(request):
-    listaTickets = Ticket.objects.all()
-    return render(request, "ticket/gestionTicket.html", {"listaTickets": listaTickets})
+    usuarioTk = request.user
 
+    if not usuarioTk.is_organizer:
+        listaTickets=Ticket.objects.filter(usuario=usuarioTk)
+    else:
+        listaTickets = Ticket.objects.all()
+    return render(request, "ticket/gestionTicket.html", 
+                  {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer})
+
+@login_required
 def create_ticket(request):
+    usuario = request.user
     tipo = request.POST['tipoEntrada']
     cantidad = request.POST['cantidadTk']
     
-    Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo)
+    Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario)
     return redirect("/tickets")
 
+@login_required
 def delete_ticket(request, id):
     tk = get_object_or_404(Ticket, ticket_code=id)
     tk.delete()
     return redirect("/tickets")
 
+@login_required
 def edit_ticket(request, id):
     tk = get_object_or_404(Ticket, ticket_code=id)
     return render(request, "ticket/edicionTicket.html",{"ticket":tk})
 
+@login_required
 def update_ticket(request):
     
     tipo = request.POST['tipoEntrada']
     cantidad = request.POST['cantidadTk']
     id = request.POST['ticketCode']
-    
     tk = get_object_or_404(Ticket, ticket_code=id)
     tk.quantity = cantidad
     tk.type = tipo
-
     tk.save()
     return redirect("/tickets")
 # codigo de ticket - fin

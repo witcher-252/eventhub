@@ -4,8 +4,10 @@
 
 {% block content %}
 <div class="container"> 
+    <h1>Tickets</h1>
     <div class="row">
 
+        {% if not user_is_organizer %}
         <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
             <div class="card-body">
                 <h5 class="card-title">Agregar Ticket</h5>
@@ -25,13 +27,13 @@
                             <option value="VIP">VIP</option>
                           </select>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group mt-3">
                     <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
                 </div>
                 </form>
               </div>
         </div>
-
+        {% endif %}
 
         <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
             <div class="table-responsive">
@@ -42,7 +44,9 @@
                             <th>cantidad</th>
                             <th>fecha de compra</th>
                             <th>Tipo</th>
+                            {% if not user_is_organizer %}
                             <th>Modificar</th>
+                            {% endif %}
                             <th>Eliminar</th>
                         </tr>
                     </thead>
@@ -53,9 +57,11 @@
                             <td>{{ t.quantity }}</td>
                             <td>{{ t.buy_date }}</td>
                             <td>{{ t.type }}</td>
+                            {% if not user_is_organizer %}
                             <td align="center"><a href="editar/{{t.ticket_code}}" class="btn btn-info"  title="Editar">
                                 <i class="bi bi-pencil-square"></i>
                               </a></td>
+                            {% endif %}
                               <td align="center"><a href="eliminar/{{t.ticket_code}}" class="btn btn-danger" title="Eliminar">
                                 <i class="bi bi-trash"></i>
                               </a></td>

@@ -80,11 +80,11 @@ class TicketType(models.TextChoices):
 
 class Ticket(models.Model):
     # variables buy_date: date, ticket_code: string, quantity: integer, type : "general"| "VIP"
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_tickets")
     ticket_code = models.AutoField(primary_key=True)
     quantity = models.PositiveIntegerField()
     buy_date = models.DateTimeField()
-    type = models.CharField(max_length=10, choices=TicketType.choices, default=TicketType.GENERAL,
-    )
+    type = models.CharField(max_length=10, choices=TicketType.choices, default=TicketType.GENERAL)
 
     def __str__(self):
         texto = "{0} ({1})"
