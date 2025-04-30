@@ -8,7 +8,24 @@
 <body class="bg-light p-4">
     <div class="container">
         <div class="row">
-            <!-- Formulario principal -->
+
+            <div class="col-md-8">
+                <div class="card mb-3">
+                    <div class="card-header"><strong>Comprar Entrada</strong></div>
+                    <div class="card-body">
+                        <h5>{{ evento.title }}</h5>
+                        <p>Fecha : {{evento.scheduled_at}} <br>📍 Estadio Nacional<br>🎤 Producciones XYZ</p>
+                        <form method="post" action="{% url 'confirm_ticket' %}">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit" class="btn btn-primary w-100">Confirmar compra</button>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+           
+            <!-- Formulario principal 
             <div class="col-md-8">
                 <div class="card mb-3">
                     <div class="card-header"><strong>Comprar Entrada</strong></div>
@@ -68,19 +85,34 @@
                         <button class="btn btn-primary w-100">Confirmar compra</button>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Resumen e información -->
             <div class="col-md-4">
                 <div class="card mb-3">
                     <div class="card-header"><strong>Resumen de compra</strong></div>
                     <div class="card-body">
-                        <p>Precio por entrada: $45.99</p>
-                        <p>Cantidad: 1</p>
-                        <p>Subtotal: $45.99</p>
-                        <p>Impuestos (10%): $4.60</p>
+                        <div class="mb-2">
+                            <label><strong>Precio por unidad:</strong></label>
+                            <p id="precioUnitario">$0</p>
+                        </div>
+                        <div class="mb-2">
+                            <label><strong>Cantidad :</strong></label>
+                            <p id="cantidadSeleccionada">0</p>
+                        </div>
+                        <div class="mb-2">
+                            <label><strong>Subtotal:</strong></label>
+                            <p id="totalAPagar">$0</p>
+                        </div>
+                        <div class="mb-2">
+                            <label><strong>Impuesto (10%):</strong></label>
+                            <p id="impuesto">$0</p>
+                        </div>
                         <hr>
-                        <h5>Total: <strong>$50.59</strong></h5>
+                        <div class="mb-2">
+                            <label><strong>Total con impuestos:</strong></label>
+                            <p id="totalFinal">$0</p>
+                        </div>
                     </div>
                 </div>
 
@@ -98,5 +130,44 @@
             </div>
         </div>
     </div>
+
+    <script>
+        const cantidadInput = document.getElementById('id_cantidad');
+        const tipoSelect = document.getElementById('id_tipo');
+    
+        const cantidadOutput = document.getElementById('cantidadSeleccionada');
+        const precioUnitarioOutput = document.getElementById('precioUnitario');
+        const totalOutput = document.getElementById('totalAPagar');
+        const impuestoOutput = document.getElementById('impuesto');
+        const totalFinalOutput = document.getElementById('totalFinal');
+    
+        function calcularTotales() {
+            const cantidad = parseInt(cantidadInput.value) || 0;
+            const tipo = tipoSelect.value;
+    
+            let precioUnitario = 0;
+            if (tipo === 'general') {
+                precioUnitario = 20000;
+            } else if (tipo === 'VIP') {
+                precioUnitario = 40000;
+            }
+    
+            const total = cantidad * precioUnitario;
+            const impuesto = total * 0.10;
+            const totalFinal = total + impuesto;
+    
+            cantidadOutput.textContent = cantidad;
+            precioUnitarioOutput.textContent = `$${precioUnitario.toLocaleString()}`;
+            totalOutput.textContent = `$${total.toLocaleString()}`;
+            impuestoOutput.textContent = `$${impuesto.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+            totalFinalOutput.textContent = `$${totalFinal.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+        }
+    
+        cantidadInput.addEventListener('input', calcularTotales);
+        tipoSelect.addEventListener('change', calcularTotales);
+    
+        // Llamamos una vez al cargar la página por si hay valores precargados
+        window.addEventListener('DOMContentLoaded', calcularTotales);
+    </script>
 </body>
 </html>

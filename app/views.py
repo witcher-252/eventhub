@@ -4,8 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.urls import reverse
-
 from .models import Event, User, Ticket
+from .ticketForm import CompraTicketForm
 
 
 def register(request):
@@ -186,5 +186,30 @@ def update_ticket(request):
 @login_required
 def buy_ticket(request, idEvento):
     event = get_object_or_404(Event, pk=idEvento)
-    return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event})
+    form = CompraTicketForm(initial={'id_evento': event.pk})
+    return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event, "form": form})
+
+@login_required
+def confirm_ticket(request):
+
+    usuario = request.user
+    form = CompraTicketForm(request.POST)
+    
+    if request.method == 'POST':
+
+        if form.is_valid():
+            # Accedés a los datos con form.cleaned_data
+            id_evento = form.cleaned_data['id_evento']
+            event = get_object_or_404(Event, pk=id_evento)
+            cantidad = form.cleaned_data['cantidad']
+            tipo = form.cleaned_data['tipo']
+            # ... procesás, guardás, etc.
+            Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
+            return redirect('gestion_ticket', idEvento= id_evento)
+        else:
+            id_evento = request.POST.get('id_evento')
+            event = get_object_or_404(Event, pk=id_evento)
+            return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event, "form": form})
+    
+
 # codigo de ticket - fin
