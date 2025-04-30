@@ -16,11 +16,12 @@ urlpatterns = [
 
 
     # urls de ticket
+    
     path('tickets/gestion/<idEvento>', views.gestion_ticket, name='gestion_ticket'),
     path('tickets/crearTicket', views.create_ticket, name='create_ticket'),
     path('tickets/editar/<id>', views.edit_ticket, name='edit_ticket'),
     path('tickets/eliminar/<id>', views.delete_ticket, name='delete_ticket'),
-    path('tickets/update', views.update_ticket, name='update_ticket'),
     path('tickets/entrada/<idEvento>', views.buy_ticket, name='buy_ticket'),
     path('tickets/confirmarEntrada', views.confirm_ticket, name='confirm_ticket'),
+    path('tickets/update', views.update_ticket, name='update_ticket'),
 ]

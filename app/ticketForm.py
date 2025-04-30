@@ -76,3 +76,33 @@ class CompraTicketForm(forms.Form):
             raise forms.ValidationError("La tarjeta está vencida.")
 
         return expiracion
+
+class TicketForm(forms.Form):
+    ticketCode = forms.IntegerField(
+        label="Código de ticket",
+        widget=forms.NumberInput(attrs={'readonly': 'readonly', 'class': 'form-control'})
+    )
+
+    buy_date = forms.DateTimeField(
+    label="Fecha de compra",
+    widget=forms.DateTimeInput(
+        attrs={
+            'readonly': 'readonly',
+            'type': 'datetime-local',
+            'class': 'form-control'
+        },
+        format='%Y-%m-%dT%H:%M'
+    ),
+    input_formats=['%Y-%m-%dT%H:%M']
+    )
+    
+    cantidadTk = forms.IntegerField(
+        label="Ingrese la cantidad",
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
+    tipoEntrada = forms.ChoiceField(
+        label="Seleccionó el tipo de Entrada",
+        choices=[('general', 'general'), ('VIP', 'VIP')],
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )

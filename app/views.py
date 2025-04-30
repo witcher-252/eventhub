@@ -5,7 +5,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.urls import reverse
 from .models import Event, User, Ticket
-from .ticketForm import CompraTicketForm
+from .ticketForm import CompraTicketForm, TicketForm
+from django.utils.timezone import localtime
 
 
 def register(request):
@@ -166,22 +167,37 @@ def delete_ticket(request, id):
     tk.delete()
     return redirect('gestion_ticket', idEvento= evento.pk)
 
+
+
 @login_required
 def edit_ticket(request, id):
     tk = get_object_or_404(Ticket, ticket_code=id)
-    return render(request, "ticket/edicionTicket.html",{"ticket":tk})
+    form = TicketForm(initial={
+    'ticketCode': tk.ticket_code,
+    'buy_date': localtime(tk.buy_date).strftime('%Y-%m-%dT%H:%M'),
+    'cantidadTk': tk.quantity,
+    'tipoEntrada': tk.type,
+    })
+    return render(request, "ticket/edicionTicket.html",{ "form": form})
 
 @login_required
 def update_ticket(request):
-    
-    tipo = request.POST['tipoEntrada']
-    cantidad = request.POST['cantidadTk']
-    id = request.POST['ticketCode']
-    tk = get_object_or_404(Ticket, ticket_code=id)
-    tk.quantity = cantidad
-    tk.type = tipo
-    tk.save()
-    return redirect('gestion_ticket', idEvento= tk.evento.pk)
+    form = TicketForm(request.POST)
+    if form.is_valid():
+              tipo = form.cleaned_data['tipoEntrada']
+              cantidad = form.cleaned_data['cantidadTk']
+              id = form.cleaned_data['ticketCode']
+              tk = get_object_or_404(Ticket, ticket_code=id)
+              tk.quantity = cantidad
+              tk.type = tipo
+              tk.save()
+              return redirect('gestion_ticket', idEvento= tk.evento.pk)
+    else:
+              id = request.POST.get('ticketCode')
+              tk = get_object_or_404(Ticket, ticket_code=id)
+              form = TicketForm(initial={'ticketCode': tk.ticket_code,'buy_date': localtime(tk.buy_date).strftime('%Y-%m-%dT%H:%M'),
+                'cantidadTk': tk.quantity,'tipoEntrada': tk.type})
+              return render(request, "ticket/edicionTicket.html",{ "form": form})
 
 @login_required
 def buy_ticket(request, idEvento):
@@ -191,25 +207,21 @@ def buy_ticket(request, idEvento):
 
 @login_required
 def confirm_ticket(request):
-
     usuario = request.user
     form = CompraTicketForm(request.POST)
-    
-    if request.method == 'POST':
-
-        if form.is_valid():
-            # Accedés a los datos con form.cleaned_data
-            id_evento = form.cleaned_data['id_evento']
-            event = get_object_or_404(Event, pk=id_evento)
-            cantidad = form.cleaned_data['cantidad']
-            tipo = form.cleaned_data['tipo']
-            # ... procesás, guardás, etc.
-            Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
-            return redirect('gestion_ticket', idEvento= id_evento)
-        else:
-            id_evento = request.POST.get('id_evento')
-            event = get_object_or_404(Event, pk=id_evento)
-            return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event, "form": form})
+    if form.is_valid():
+        # Accedés a los datos con form.cleaned_data
+        id_evento = form.cleaned_data['id_evento']
+        event = get_object_or_404(Event, pk=id_evento)
+        cantidad = form.cleaned_data['cantidad']
+        tipo = form.cleaned_data['tipo']
+        # ... procesás, guardás, etc.
+        Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
+        return redirect('gestion_ticket', idEvento= id_evento)
+    else:
+        id_evento = request.POST.get('id_evento')
+        event = get_object_or_404(Event, pk=id_evento)
+        return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event, "form": form})
     
 
 # codigo de ticket - fin
