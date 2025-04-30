@@ -74,6 +74,8 @@ class Event(models.Model):
 
         self.save()
 
+
+# modelo para ticket
 class TicketType(models.TextChoices):
         GENERAL = 'general', 'General'
         VIP = 'VIP', 'VIP'
@@ -81,6 +83,7 @@ class TicketType(models.TextChoices):
 class Ticket(models.Model):
     # variables buy_date: date, ticket_code: string, quantity: integer, type : "general"| "VIP"
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_tickets")
+    evento = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="organized_tickets")
     ticket_code = models.AutoField(primary_key=True)
     quantity = models.PositiveIntegerField()
     buy_date = models.DateTimeField()

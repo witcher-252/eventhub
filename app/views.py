@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.urls import reverse
 
 from .models import Event, User, Ticket
 
@@ -113,7 +114,6 @@ def event_form(request, id=None):
         else:
             event = get_object_or_404(Event, pk=id)
             event.update(title, description, scheduled_at, request.user)
-
         return redirect("events")
 
     event = {}
@@ -129,30 +129,42 @@ def event_form(request, id=None):
 # codigo de ticket - inicio
 
 @login_required
-def gestion_ticket(request):
+def gestion_ticket(request, idEvento):
     usuarioTk = request.user
+    listaTickets= None
 
+    event = get_object_or_404(Event, pk=idEvento)
     if not usuarioTk.is_organizer:
         listaTickets=Ticket.objects.filter(usuario=usuarioTk)
     else:
-        listaTickets = Ticket.objects.all()
-    return render(request, "ticket/gestionTicket.html", 
+        tiene_eventos = Event.objects.filter(organizer=usuarioTk).exists()
+        if not tiene_eventos:
+             return render(request, "ticket/gestionTicket.html", 
                   {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer})
+        eventosOrg = usuarioTk.organized_events.all()
+        listaTickets = Ticket.objects.filter(evento__in=eventosOrg)
+
+    return render(request, "ticket/gestionTicket.html", 
+                  {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer, "event": event})
 
 @login_required
 def create_ticket(request):
+
     usuario = request.user
+    idEvento = request.POST['idEvento']
+    event = get_object_or_404(Event, pk=idEvento)
     tipo = request.POST['tipoEntrada']
     cantidad = request.POST['cantidadTk']
     
-    Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario)
-    return redirect("/tickets")
+    Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
+    return redirect('gestion_ticket', idEvento= idEvento)
 
 @login_required
 def delete_ticket(request, id):
     tk = get_object_or_404(Ticket, ticket_code=id)
+    evento = tk.evento
     tk.delete()
-    return redirect("/tickets")
+    return redirect('gestion_ticket', idEvento= evento.pk)
 
 @login_required
 def edit_ticket(request, id):
@@ -169,5 +181,10 @@ def update_ticket(request):
     tk.quantity = cantidad
     tk.type = tipo
     tk.save()
-    return redirect("/tickets")
+    return redirect('gestion_ticket', idEvento= tk.evento.pk)
+
+@login_required
+def buy_ticket(request, idEvento):
+    event = get_object_or_404(Event, pk=idEvento)
+    return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event})
 # codigo de ticket - fin
