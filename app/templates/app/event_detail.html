@@ -49,93 +49,82 @@
 
 
 
+<!--gerardo -->
 
-    <!--gerardo -->
+<div class="card mt-3">
+    <div class="card-body">
+        <h4>Calificaciones y Reseñas ( {{ ratings|length }} )</h4>
+        <div style="max-height: 400px; overflow-y: auto;">
+        <!-- Reseña 1 -->
+        {% for r in ratings %}
+        <div class="review-box">
+            <strong>usuario : {{ r.usuario.username }}</strong><br>
+            <small class="text-muted">fecha: {{ r.created_at }}</small>
+            <h6 class="mt-2">{{ r.title }}</h6>
 
-    <div class="card mt-3">
-        <div class="card-body">
-            <h4>Calificaciones y Reseñas (2)</h4>
-            <div style="max-height: 400px; overflow-y: auto;">
-            <!-- Reseña 1 -->
-            <div class="review-box">
-              <strong>Carlos Rodríguez</strong><br>
-              <small class="text-muted">16 may 2025, 10:20</small>
-              <h6 class="mt-2">Experiencia increíble</h6>
-              <div class="star-rating mb-2">
+            <div class="star-rating mb-2">{% for _ in r.full_stars %}
+                <i class="bi bi-star-fill" style="color: gold;"></i>
+                {% endfor %}
+                {% for _ in r.empty_stars %}
+                <i class="bi bi-star" style="color: gold;"></i>
+                {% endfor %}
+            </div>
+
+
+            <!--<div class="star-rating mb-2">
                 <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
+            </div>-->
+            
+            
+            
+            <p>{{ r.text }}.</p>
+        </div>        
+        {% endfor %}
+        </div>
+        
+        
+        
+        
+        <form action="/rating/crearRating" method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-2 mt-4">
+              <label class="form-label"><h5>{{ form.tituloR.label }}</h5></label>
+              {{ form.tituloR }}
+              {{ form.tituloR.errors }}
+            </div>
+          
+            {{ form.idEventoRating }}
+            
+            <div class="mb-2">
+              <label class="form-label">Tu calificación *</label>
+              <div class="star-rating star-selectable">
+                <i class="far fa-star" data-value="1"></i>
+                <i class="far fa-star" data-value="2"></i>
+                <i class="far fa-star" data-value="3"></i>
+                <i class="far fa-star" data-value="4"></i>
+                <i class="far fa-star" data-value="5"></i>
               </div>
-              <p>Excelente organización y bandas increíbles.</p>
+              <small class="form-text text-muted">Selecciona una calificación</small>
+              {{ form.califiqueR.errors }}
             </div>
-
-                <div class="review-box">
-                    <strong>Ana Martínez</strong><br>
-                    <small class="text-muted">16 may 2025, 12:45</small>
-                    <h6 class="mt-2">Buen evento con algunos problemas</h6>
-                    <div class="star-rating mb-2">
-                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
-                    </div>
-                    <p>Muy buen evento, aunque hubo algunos problemas con el sonido.</p>
-                </div>
-                <div class="review-box">
-                    <strong>Carlos Rodríguez</strong><br>
-                    <small class="text-muted">16 may 2025, 10:20</small>
-                    <h6 class="mt-2">Experiencia increíble</h6>
-                    <div class="star-rating mb-2">
-                      <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                    </div>
-                    <p>Excelente organización y bandas increíbles.</p>
-                  </div>
-      
-                      <div class="review-box">
-                          <strong>Ana Martínez</strong><br>
-                          <small class="text-muted">16 may 2025, 12:45</small>
-                          <h6 class="mt-2">Buen evento con algunos problemas</h6>
-                          <div class="star-rating mb-2">
-                          <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="far fa-star"></i>
-                          </div>
-                          <p>Muy buen evento, aunque hubo algunos problemas con el sonido.</p>
-                      </div>
+          
+            {{ form.califiqueR }}
+          
+            <div class="mb-3">
+              <label class="form-label">{{ form.descripcionR.label }}</label>
+              {{ form.descripcionR }}
+              {{ form.descripcionR.errors }}
             </div>
-            
-            
-            
-            <form action="/rating/crearRating" method="POST">
-                {% csrf_token %}
-                
-                <div class="mb-2 mt-4">
-                  <label class="form-label"><h5>{{ form.tituloR.label }}</h5></label>
-                  {{ form.tituloR }}
-                </div>
-              
-                {{ form.idEventoRating }}
-                
-                <div class="mb-2">
-                  <label class="form-label">Tu calificación *</label>
-                  <div class="star-rating star-selectable">
-                    <i class="far fa-star" data-value="1"></i>
-                    <i class="far fa-star" data-value="2"></i>
-                    <i class="far fa-star" data-value="3"></i>
-                    <i class="far fa-star" data-value="4"></i>
-                    <i class="far fa-star" data-value="5"></i>
-                  </div>
-                  <small class="form-text text-muted">Selecciona una calificación</small>
-                </div>
-              
-                {{ form.califiqueR }}
-              
-                <div class="mb-3">
-                  <label class="form-label">{{ form.descripcionR.label }}</label>
-                  {{ form.descripcionR }}
-                </div>
-              
-                <button type="submit" class="btn btn-primary">Enviar calificación</button>
-              </form>   
-            </div>
-
-
+          
+            <button type="submit" class="btn btn-primary">Enviar calificación</button>
+          </form>   
         </div>
 
-        <!--fin gerardo -->
+
+    </div>
+
+    <!--fin gerardo -->
 
 
 
@@ -161,9 +150,11 @@
         const stars = star.parentElement.querySelectorAll('i');
         stars.forEach((s, i) => {
           s.className = i < value ? 'fas fa-star' : 'far fa-star';
+          s.style = "color: gold;";
         });
       });
     });
   </script>
-<!--fin gerardo -->
+<!--fin gerardo -->
+
 {% endblock %}

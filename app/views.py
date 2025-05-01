@@ -73,9 +73,13 @@ def events(request):
 def event_detail(request, id):
     event = get_object_or_404(Event, pk=id)
     # creo formulario para rating - gerardo
+    listaRating = Rating.objects.filter(evento=event)
     form = RatingForm(initial={'idEventoRating': event.pk})
-    # fin
-    return render(request, "app/event_detail.html", {"event": event, "form": form})
+    for r in listaRating:
+        r.full_stars = range(r.rating)
+        r.empty_stars = range(5 - r.rating)
+    # fin 
+    return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating })
 
 @login_required
 def event_delete(request, id):
@@ -150,11 +154,15 @@ def formulario_rating(request):
         rating = form.cleaned_data['califiqueR']
         # ... procesás, guardás, etc.
         Rating.objects.create( title=titulo , text=descripcion, rating=rating, usuario =usuario, evento=event)
-        return render(request, "app/event_detail.html", {"event": event, "form": form})
+        return redirect('event_detail', id=idEvento)
     else:
         idEvento = request.POST.get('idEventoRating')
         event = get_object_or_404(Event, pk=idEvento)
-        return render(request, "app/event_detail.html", {"event": event, "form": form})
+        listaRating = Rating.objects.filter(evento=event)
+        for r in listaRating:
+            r.full_stars = range(r.rating)
+            r.empty_stars = range(5 - r.rating)
+        return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating })
                                                          
 # aca meto mi magia
 def edicionRating(request, id):
