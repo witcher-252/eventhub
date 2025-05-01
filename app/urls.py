@@ -19,4 +19,12 @@ urlpatterns = [
     path('registrar_comentario/', views.registrar_comentario, name='registrar_comentario'),
     path('comments/<int:event_id>/deleteComment/<int:id>/', views.delete_comment, name='delete_comment'),
     path("comments/<int:event_id>/editComment/<int:comment_id>/", views.edit_comment, name="edit_comment"),
+    path('notifications/', views.notification_redirect, name='notification_redirect'),
+    path('notifications/organizador/', views.notification_list, name='notification_list'),
+    path('notificaciones/usuario/', views.notification_list_user, name='notification_list_user'),
+    path('notificaciones/marcar-leida/<int:pk>/', views.mark_as_read, name='mark_as_read'),
+    path('notifications/create/', views.notification_create, name='notification_create'),
+    path('notifications/detail/<int:pk>/', views.notification_detail, name='notification_detail'),
+    path('notifications/edit/<int:pk>/', views.notification_edit, name='notification_edit'),
+    path('notifications/delete/<int:pk>/', views.notification_delete, name='notification_delete'),
 ]
