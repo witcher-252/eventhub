@@ -1,5 +1,5 @@
 from django import forms
-from .models import Notification, Event
+from ..models import Notification, Event
 from django.contrib.auth.models import User
 
 class NotificationForm(forms.ModelForm):
