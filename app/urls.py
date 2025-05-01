@@ -13,4 +13,12 @@ urlpatterns = [
     path("events/<int:id>/edit/", views.event_form, name="event_edit"),
     path("events/<int:id>/", views.event_detail, name="event_detail"),
     path("events/<int:id>/delete/", views.event_delete, name="event_delete"),
+    path('notifications/', views.notification_redirect, name='notification_redirect'),
+    path('notifications/organizador/', views.notification_list, name='notification_list'),
+    path('notificaciones/usuario/', views.notification_list_user, name='notification_list_user'),
+    path('notificaciones/marcar-leida/<int:pk>/', views.mark_as_read, name='mark_as_read'),
+    path('notifications/create/', views.notification_create, name='notification_create'),
+    path('notifications/detail/<int:pk>/', views.notification_detail, name='notification_detail'),
+    path('notifications/edit/<int:pk>/', views.notification_edit, name='notification_edit'),
+    path('notifications/delete/<int:pk>/', views.notification_delete, name='notification_delete'),
 ]

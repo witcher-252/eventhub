@@ -3,9 +3,96 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-
+from django.db.models import Q
 from .models import Event, User
+from .models import Notification, Event
+from .forms import NotificationForm
 
+@login_required
+def notification_redirect(request):
+    if request.user.is_organizer:
+        return redirect('notification_list')
+    else:
+        return redirect('notification_list_user')
+
+@login_required
+def notification_list_user(request):
+    notifications = Notification.objects.filter(
+        Q(user=request.user) | Q(user__isnull=True)
+    ).select_related('event')
+    unread_count = notifications.filter(is_read=False).count()
+    return render(request, 'notifications/list_user.html', {
+        'notifications': notifications,
+        'unread_count': unread_count
+    })
+
+@login_required
+def notification_list(request):
+    notifications = Notification.objects.all().select_related('user', 'event')
+    q = request.GET.get('q')
+    event_id = request.GET.get('event')
+    priority = request.GET.get('priority')
+
+    if q:
+        notifications = notifications.filter(title__icontains=q)
+    if event_id:
+        notifications = notifications.filter(event__id=event_id)
+    if priority:
+        notifications = notifications.filter(priority=priority)
+
+    events = Event.objects.all()
+    return render(request, 'notifications/list.html', {
+        'notifications': notifications,
+        'events': events
+    })
+    
+@login_required
+def mark_as_read(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+
+    if notification.user is None or notification.user == request.user:
+        notification.is_read = True
+        notification.save()
+
+    return redirect('notification_list_user')
+
+def notification_create(request):
+    if request.method == 'POST':
+        form = NotificationForm(request.POST)
+        if form.is_valid():
+            notification = form.save(commit=False)
+            if form.cleaned_data['destinatario_tipo'] == 'todos':
+                notification.user = None
+            notification.save()
+            return redirect('notification_list')
+    else:
+        form = NotificationForm()
+    return render(request, 'notifications/create.html', {'form': form})
+
+def notification_detail(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    return render(request, 'notifications/detail.html', {'notification': notification})
+
+def notification_edit(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    if request.method == 'POST':
+        form = NotificationForm(request.POST, instance=notification)
+        if form.is_valid():
+            notification = form.save(commit=False)
+            if form.cleaned_data['destinatario_tipo'] == 'todos':
+                notification.user = None
+            notification.save()
+            return redirect('notification_list')
+    else:
+        form = NotificationForm(instance=notification)
+    return render(request, 'notifications/edit.html', {'form': form, 'notification': notification})
+
+def notification_delete(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    if request.method == 'POST':
+        notification.delete()
+        return redirect('notification_list')
+    return render(request, 'notifications/delete.html', {'notification': notification})
 
 def register(request):
     if request.method == "POST":
