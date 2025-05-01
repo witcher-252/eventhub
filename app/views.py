@@ -138,10 +138,9 @@ def gestion_ticket(request, idEvento):
     if not usuarioTk.is_organizer:
         listaTickets=Ticket.objects.filter(usuario=usuarioTk)
     else:
-        tiene_eventos = Event.objects.filter(organizer=usuarioTk).exists()
+        tiene_eventos = Event.objects.filter(organizer=usuarioTk, pk=idEvento).exists()
         if not tiene_eventos:
-             return render(request, "ticket/gestionTicket.html", 
-                  {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer})
+             return render(request, "ticket/gestionTicket.html", {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer})
         eventosOrg = usuarioTk.organized_events.all()
         listaTickets = Ticket.objects.filter(evento__in=eventosOrg)
 
