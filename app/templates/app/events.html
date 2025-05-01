@@ -26,33 +26,39 @@
             </tr>
         </thead>
         <tbody>
-            {% for event in events%}
+            {% for event in events %}
                 <tr>
                     <td>{{ event.title }}</td>
                     <td>{{ event.description }}</td>
                     <td>{{ event.scheduled_at|date:"d b Y, H:i" }}</td>
                     <td>
                         <div class="hstack gap-1">
-                            <a href="{% url 'event_detail' event.id %}"
-                               class="btn btn-sm btn-outline-primary"
-                               aria-label="Ver detalle"
-                               title="Ver detalle">
+                            <a href="{% url 'event_detail' event.id %}" class="btn btn-sm btn-outline-primary" aria-label="Ver detalle" title="Ver detalle">
                                 <i class="bi bi-eye" aria-hidden="true"></i>
                             </a>
+                            
+                            {% if user.is_authenticated %}
+                                {% if user_is_organizer %}
+                                    <!-- Organizador puede ver los comentarios -->
+                                    <a href="{% url 'comments' event.id %}" class="btn btn-sm btn-outline-warning" title="Ver Comentarios" aria-label="Ver Comentarios">
+                                        <i class="bi bi-chat-dots" aria-hidden="true"></i>
+                                    </a>
+                                {% else %}
+                                    <!-- Usuario común puede comentar -->
+                                    <a href="{% url 'comments' event.id %}" class="btn btn-sm btn-outline-success" title="Comentar" aria-label="Comentar">
+                                        <i class="bi bi-chat-left-text" aria-hidden="true"></i>
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+                            
                             {% if user_is_organizer %}
-                                <a href="{% url 'event_edit' event.id %}"
-                                    class="btn btn-sm btn-outline-secondary"
-                                    aria-label="Editar"
-                                    title="Editar">
+                                <!-- Organizador puede editar y eliminar eventos -->
+                                <a href="{% url 'event_edit' event.id %}" class="btn btn-sm btn-outline-secondary" aria-label="Editar" title="Editar">
                                     <i class="bi bi-pencil" aria-hidden="true"></i>
                                 </a>
                                 <form action="{% url 'event_delete' event.id %}" method="POST">
                                     {% csrf_token %}
-                                    <button class="btn btn-sm btn-outline-danger"
-                                        title="Eliminar"
-                                        type="submit"
-                                        aria-label="Eliminar"
-                                        titile="Eliminar">
+                                    <button class="btn btn-sm btn-outline-danger" title="Eliminar" type="submit" aria-label="Eliminar">
                                         <i class="bi bi-trash" aria-hidden="true"></i>
                                     </button>
                                 </form>

@@ -1,10 +1,14 @@
 import datetime
+
+from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.db.models import Q
-from .models import Event, User
+from .models import Comment, Event, User
 from .models import Notification, Event
 from .forms import NotificationForm
 
@@ -212,3 +216,81 @@ def event_form(request, id=None):
         "app/event_form.html",
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
+
+# ---- Comments view ----
+
+@login_required
+def comment(request, event_id):
+    event = get_object_or_404(Event, pk=event_id)
+    comments = Comment.objects.filter(event=event).order_by("-created_at")
+    
+    paginator = Paginator(comments, 20)
+    page_number = request.GET.get("page")
+    comments_page = paginator.get_page(page_number)
+    
+    return render(request, "comments/comments.html", {
+        "event": event,
+        "comments": comments_page
+    })
+
+@login_required
+def registrar_comentario(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        text = request.POST.get('text')
+        event_id = request.POST.get('event_id')
+
+        if not event_id:
+            # Manejar el error si el event_id no se proporciona
+            return HttpResponseBadRequest("No se ha proporcionado el ID del evento.")
+
+        event = get_object_or_404(Event, id=event_id)
+
+        Comment.objects.create(
+            title=title,
+            text=text,
+            user=request.user,
+            event=event
+        )
+
+        return redirect("comments", event_id=event.id) # type: ignore
+    return HttpResponseBadRequest("Método no permitido.")
+
+
+@login_required
+def delete_comment(request, event_id, id):
+    comment = get_object_or_404(Comment, id=id, event_id=event_id)
+
+    # Un usuario común puede eliminar su comentario; un organizador puede eliminar cualquier comentario
+    if not (request.user == comment.user or request.user.is_organizer):
+        return HttpResponseForbidden("No tenés permiso para eliminar este comentario.")
+
+    comment.delete()
+    messages.success(request, "Comentario eliminado con éxito.")
+    return redirect("comments", event_id=event_id)
+
+
+@login_required
+def edit_comment(request, event_id, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, event__id=event_id)
+
+    # Solo el autor del comentario puede editarlo, siempre que NO sea organizador
+    if request.user.is_organizer or request.user != comment.user:
+        messages.error(request, "No tienes permiso para editar este comentario.")
+        return redirect('comments/comments', event_id=event_id)
+
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        text = request.POST.get('text')
+
+        if title and text:
+            comment.title = title
+            comment.text = text
+            comment.save()
+            messages.success(request, "Comentario actualizado correctamente.")
+        else:
+            messages.error(request, "Ambos campos son obligatorios.")
+
+        return redirect('comments', event_id=event_id)
+
+    return redirect('comments', event_id=event_id)
