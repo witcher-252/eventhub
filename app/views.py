@@ -142,5 +142,33 @@ def formulario_rating(request):
     
     Rating.objects.create( title=titulo , text=descripcion, rating=rating)
     return redirect("/rating")
+# aca meto mi magia
+def edicionRating(request, id):
+    rating = Rating.objects.get(id=id)
+    return render(request, "rating/edicionRating.html", {"rating": rating})
+
+
+def editarRating(request):
+    titulo = request.POST['tituloR']
+    descripcion = request.POST['descripcionR']
+    rating = request.POST['califiqueR']
+
+    rating = Rating.objects.get(rating=rating)
+    rating.title = titulo
+    rating.text = descripcion
+    rating.save()
+
+    #messages.success(request, '¡Comentario actualizado!')
+
+    return redirect("/rating")
+
+
+def eliminarRating(request, id):
+    rating = Rating.objects.get(id=id)
+    rating.delete()
+
+   # messages.success(request, '¡Curso eliminado!')
+
+    return redirect("/rating")
 
 #Codigo de Rating - Fin

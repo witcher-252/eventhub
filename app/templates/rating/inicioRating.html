@@ -42,8 +42,9 @@
                         <tr>
                             <th>Titulo</th>
                             <th>Comentario</th>
-                            <th>Puntuacion</th>
+                            <th style="width: 150px;">Puntuación</th>
                             <th>Fecha</th>
+                            <th colspan="2">Opciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -58,7 +59,10 @@
                                 <i class="bi bi-star" style="color: gold;"></i>
                                 {% endfor %}
                             </td>
+                            
                             <td>{{ r.created_at|date:"d F Y H:i" }}</td>
+                            <td><a href="edicionRating/{{r.id}}" class="btn btn-info">Editar</a></td>
+                            <td><a href="eliminarRating/{{r.id}}" class="btn btn-danger btnEliminacion">Eliminar</a></td>
                         </tr>
                         {% endfor %}
                     </tbody>

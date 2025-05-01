@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Eventos{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4 offset-md-4">
+        <h2>Edición de Rating</h2>
+        <div class="card">
+            <div class="card-body">
+                <form action="/editarCurso/" method="POST">{% csrf_token %}
+                    <div class="form-group">
+                        <input type="text" id="txtCodigo" name="txtCodigo" value="{{curso.codigo}}" class="form-control" placeholder="Código"
+                            minlength="6" maxlength="6" readonly required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="txtNombre" name="txtNombre" value="{{curso.nombre}}" class="form-control" placeholder="Nombre"
+                            maxlength="50" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="numCreditos" name="numCreditos" value="{{curso.creditos}}" class="form-control" min="1" max="9"
+                            value="1" required>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+<!--#------------------------paso cristian
+view:
+@login_required
+def delete_ticket(request, id):
+    tk = get_object_or_404(Ticket, ticket_code=id)
+    tk.delete()
+    return redirect("/tickets")
+
+@login_required
+def edit_ticket(request, id):
+    tk = get_object_or_404(Ticket, ticket_code=id)
+    return render(request, "ticket/edicionTicket.html",{"ticket":tk})
+
+@login_required
+def update_ticket(request):
+    
+    tipo = request.POST['tipoEntrada']
+    cantidad = request.POST['cantidadTk']
+    id = request.POST['ticketCode']
+    tk = get_object_or_404(Ticket, ticket_code=id)
+    tk.quantity = cantidad
+    tk.type = tipo
+    tk.save()
+    return redirect("/tickets")
+
+
+------------------formulario de modificacion:
+<label class="form-label">Ingrese la cantidad</label>
+                    <div class="form-group">
+                        <input type="number" value={{ticket.quantity}} id="cantidadTk" name="cantidadTk">
+                    </div> -->
