@@ -1,0 +1,1 @@
+from .rating_form import RatingForm

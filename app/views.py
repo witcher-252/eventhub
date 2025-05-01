@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .models import Event, User, Rating
+from .forms import RatingForm
 
 
 def register(request):
@@ -71,8 +72,10 @@ def events(request):
 @login_required
 def event_detail(request, id):
     event = get_object_or_404(Event, pk=id)
-    return render(request, "app/event_detail.html", {"event": event})
-
+    # creo formulario para rating - gerardo
+    form = RatingForm(initial={'idEventoRating': event.pk})
+    # fin
+    return render(request, "app/event_detail.html", {"event": event, "form": form})
 
 @login_required
 def event_delete(request, id):
@@ -136,12 +139,23 @@ def inicio_rating(request):
     return render(request, "rating/inicioRating.html", {"listaRating": listaRating})
 
 def formulario_rating(request):
-    titulo = request.POST['tituloR']
-    descripcion = request.POST['descripcionR']
-    rating = request.POST['califiqueR']
-    
-    Rating.objects.create( title=titulo , text=descripcion, rating=rating)
-    return redirect("/rating")
+    usuario = request.user
+    form = RatingForm(request.POST)
+    if form.is_valid():
+        # Accedés a los datos con form.cleaned_data
+        idEvento = form.cleaned_data['idEventoRating']
+        event = get_object_or_404(Event, pk=idEvento)
+        titulo = form.cleaned_data['tituloR']
+        descripcion = form.cleaned_data['descripcionR']
+        rating = form.cleaned_data['califiqueR']
+        # ... procesás, guardás, etc.
+        Rating.objects.create( title=titulo , text=descripcion, rating=rating, usuario =usuario, evento=event)
+        return render(request, "app/event_detail.html", {"event": event, "form": form})
+    else:
+        idEvento = request.POST.get('idEventoRating')
+        event = get_object_or_404(Event, pk=idEvento)
+        return render(request, "app/event_detail.html", {"event": event, "form": form})
+                                                         
 # aca meto mi magia
 def edicionRating(request, id):
     rating = Rating.objects.get(id=id)

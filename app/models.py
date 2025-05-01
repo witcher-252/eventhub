@@ -76,6 +76,8 @@ class Event(models.Model):
         self.save()
 class Rating(models.Model):
     # title: string, text: string, rating: integer, created_at: datetime
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_ratings")
+    evento = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="organized_ratings")
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=30)
     text = models.CharField (max_length=250)
