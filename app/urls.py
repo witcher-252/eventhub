@@ -18,6 +18,5 @@ urlpatterns = [
     path("comments/<int:event_id>/", views.comment, name="comments"),
     path('registrar_comentario/', views.registrar_comentario, name='registrar_comentario'),
     path('comments/<int:event_id>/deleteComment/<int:id>/', views.delete_comment, name='delete_comment'),
-    path("comments/<int:event_id>/editComment/<int:id>/", views.edit_comment, name="edit_comment"),
+    path("comments/<int:event_id>/editComment/<int:comment_id>/", views.edit_comment, name="edit_comment"),
 ]
-

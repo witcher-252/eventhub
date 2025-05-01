@@ -141,7 +141,7 @@ def comment(request, event_id):
     page_number = request.GET.get("page")
     comments_page = paginator.get_page(page_number)
     
-    return render(request, "comments.html", {
+    return render(request, "comments/comments.html", {
         "event": event,
         "comments": comments_page
     })
@@ -190,7 +190,7 @@ def edit_comment(request, event_id, comment_id):
     # Solo el autor del comentario puede editarlo, siempre que NO sea organizador
     if request.user.is_organizer or request.user != comment.user:
         messages.error(request, "No tienes permiso para editar este comentario.")
-        return redirect('comments', event_id=event_id)
+        return redirect('comments/comments', event_id=event_id)
 
     if request.method == 'POST':
         title = request.POST.get('title')
