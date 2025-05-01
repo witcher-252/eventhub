@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.urls import reverse
 from .models import Event, User, Ticket
-from .ticketForm import CompraTicketForm, TicketForm
+from .forms import CompraTicketForm, TicketForm
 from django.utils.timezone import localtime
 
 
