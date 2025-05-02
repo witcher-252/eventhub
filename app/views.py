@@ -1,12 +1,104 @@
 import datetime
+
+from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-from .models import Event, User, RefundRequest
-from .forms import RefundRequestForm
+from .models import Event, User, RefundRequest, Notification, Comment
+from .forms import RefundRequestForm, NotificationForm
 
+from django.db.models import Q
+
+
+@login_required
+def notification_redirect(request):
+    if request.user.is_organizer:
+        return redirect('notification_list')
+    else:
+        return redirect('notification_list_user')
+
+@login_required
+def notification_list_user(request):
+    notifications = Notification.objects.filter(
+        Q(user=request.user) | Q(user__isnull=True)
+    ).select_related('event')
+    unread_count = notifications.filter(is_read=False).count()
+    return render(request, 'notifications/list_user.html', {
+        'notifications': notifications,
+        'unread_count': unread_count
+    })
+
+@login_required
+def notification_list(request):
+    notifications = Notification.objects.all().select_related('user', 'event')
+    q = request.GET.get('q')
+    event_id = request.GET.get('event')
+    priority = request.GET.get('priority')
+
+    if q:
+        notifications = notifications.filter(title__icontains=q)
+    if event_id:
+        notifications = notifications.filter(event__id=event_id)
+    if priority:
+        notifications = notifications.filter(priority=priority)
+
+    events = Event.objects.all()
+    return render(request, 'notifications/list.html', {
+        'notifications': notifications,
+        'events': events
+    })
+    
+@login_required
+def mark_as_read(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+
+    if notification.user is None or notification.user == request.user:
+        notification.is_read = True
+        notification.save()
+
+    return redirect('notification_list_user')
+
+def notification_create(request):
+    if request.method == 'POST':
+        form = NotificationForm(request.POST)
+        if form.is_valid():
+            notification = form.save(commit=False)
+            if form.cleaned_data['destinatario_tipo'] == 'todos':
+                notification.user = None
+            notification.save()
+            return redirect('notification_list')
+    else:
+        form = NotificationForm()
+    return render(request, 'notifications/create.html', {'form': form})
+
+def notification_detail(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    return render(request, 'notifications/detail.html', {'notification': notification})
+
+def notification_edit(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    if request.method == 'POST':
+        form = NotificationForm(request.POST, instance=notification)
+        if form.is_valid():
+            notification = form.save(commit=False)
+            if form.cleaned_data['destinatario_tipo'] == 'todos':
+                notification.user = None
+            notification.save()
+            return redirect('notification_list')
+    else:
+        form = NotificationForm(instance=notification)
+    return render(request, 'notifications/edit.html', {'form': form, 'notification': notification})
+
+def notification_delete(request, pk):
+    notification = get_object_or_404(Notification, pk=pk)
+    if request.method == 'POST':
+        notification.delete()
+        return redirect('notification_list')
+    return render(request, 'notifications/delete.html', {'notification': notification})
 
 def register(request):
     if request.method == "POST":
@@ -126,6 +218,84 @@ def event_form(request, id=None):
         "app/event_form.html",
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
+
+# ---- Comments view ----
+
+@login_required
+def comment(request, event_id):
+    event = get_object_or_404(Event, pk=event_id)
+    comments = Comment.objects.filter(event=event).order_by("-created_at")
+    
+    paginator = Paginator(comments, 20)
+    page_number = request.GET.get("page")
+    comments_page = paginator.get_page(page_number)
+    
+    return render(request, "comments/comments.html", {
+        "event": event,
+        "comments": comments_page
+    })
+
+@login_required
+def registrar_comentario(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        text = request.POST.get('text')
+        event_id = request.POST.get('event_id')
+
+        if not event_id:
+            # Manejar el error si el event_id no se proporciona
+            return HttpResponseBadRequest("No se ha proporcionado el ID del evento.")
+
+        event = get_object_or_404(Event, id=event_id)
+
+        Comment.objects.create(
+            title=title,
+            text=text,
+            user=request.user,
+            event=event
+        )
+
+        return redirect("comments", event_id=event.id) # type: ignore
+    return HttpResponseBadRequest("Método no permitido.")
+
+
+@login_required
+def delete_comment(request, event_id, id):
+    comment = get_object_or_404(Comment, id=id, event_id=event_id)
+
+    # Un usuario común puede eliminar su comentario; un organizador puede eliminar cualquier comentario
+    if not (request.user == comment.user or request.user.is_organizer):
+        return HttpResponseForbidden("No tenés permiso para eliminar este comentario.")
+
+    comment.delete()
+    messages.success(request, "Comentario eliminado con éxito.")
+    return redirect("comments", event_id=event_id)
+
+
+@login_required
+def edit_comment(request, event_id, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, event__id=event_id)
+
+    # Solo el autor del comentario puede editarlo, siempre que NO sea organizador
+    if request.user.is_organizer or request.user != comment.user:
+        messages.error(request, "No tienes permiso para editar este comentario.")
+        return redirect('comments/comments', event_id=event_id)
+
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        text = request.POST.get('text')
+
+        if title and text:
+            comment.title = title
+            comment.text = text
+            comment.save()
+            messages.success(request, "Comentario actualizado correctamente.")
+        else:
+            messages.error(request, "Ambos campos son obligatorios.")
+
+        return redirect('comments', event_id=event_id)
+
+    return redirect('comments', event_id=event_id)
 
 
 @login_required
