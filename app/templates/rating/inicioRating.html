@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Eventos{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+
+        <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Titulo</th>
+                            <th>Comentario</th>
+                            <th style="width: 150px;">Puntuación</th>
+                            <th>Fecha</th>
+                            <th colspan="2">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in listaRating %}
+                        <tr>
+                            <td>{{ r.title }}</td>
+                            <td>{{ r.text }}</td>
+                            <td>{% for _ in r.full_stars %}
+                                <i class="bi bi-star-fill" style="color: gold;"></i>
+                                {% endfor %}
+                                {% for _ in r.empty_stars %}
+                                <i class="bi bi-star" style="color: gold;"></i>
+                                {% endfor %}
+                            </td>
+                            
+                            <td>{{ r.created_at|date:"d F Y H:i" }}</td>
+                            <td><a href="edicionRating/{{r.id}}" class="btn btn-info">Editar</a></td>
+                            <td><a href="eliminarRating/{{r.id}}" class="btn btn-danger btnEliminacion">Eliminar</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+{% endblock %}

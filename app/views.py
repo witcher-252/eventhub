@@ -8,10 +8,9 @@ from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.urls import reverse
-from .models import Event, User, Ticket, RefundRequest, Notification, Comment
-from .forms import CompraTicketForm, TicketForm
+from .models import Event, User, Ticket, RefundRequest, Notification, Comment, Rating
+from .forms import CompraTicketForm, TicketForm, RefundRequestForm, NotificationForm, RatingForm
 from django.utils.timezone import localtime
-from .forms import RefundRequestForm, NotificationForm
 from django.db.models import Q
 
 
@@ -149,7 +148,7 @@ def login_view(request):
 
 
 def home(request):
-    return render(request, "home.html")
+    return render(request, "home.html", {"user_is_organizer": request.user.is_organizer})
 
 
 @login_required
@@ -165,8 +164,14 @@ def events(request):
 @login_required
 def event_detail(request, id):
     event = get_object_or_404(Event, pk=id)
-    return render(request, "app/event_detail.html", {"event": event, "user_is_organizer": request.user.is_organizer})
-
+    # creo formulario para rating - gerardo
+    listaRating = Rating.objects.filter(evento=event)
+    form = RatingForm(initial={'idEventoRating': event.pk})
+    for r in listaRating:
+        r.full_stars = range(r.rating)
+        r.empty_stars = range(5 - r.rating)
+    # fin 
+    return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating ,"user_is_organizer": request.user.is_organizer })
 
 @login_required
 def event_delete(request, id):
@@ -490,4 +495,83 @@ def confirm_ticket(request):
         return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event, "form": form})
     
 
-# codigo de ticket - fin
+# codigo de ticket - fin# codigo de Rating - inicio
+@login_required
+def inicio_rating(request):
+    if request.user.is_organizer:
+        return redirect('events')
+    listaRating = Rating.objects.filter(usuario=request.user)
+
+    for r in listaRating:
+        r.full_stars = range(r.rating)
+        r.empty_stars = range(5 - r.rating)
+
+    return render(request, "rating/inicioRating.html", {"listaRating": listaRating})
+
+@login_required
+def formulario_rating(request):
+    usuario = request.user
+    form = RatingForm(request.POST)
+    if form.is_valid():
+        # Accedés a los datos con form.cleaned_data
+        idEvento = form.cleaned_data['idEventoRating']
+        event = get_object_or_404(Event, pk=idEvento)
+        titulo = form.cleaned_data['tituloR']
+        descripcion = form.cleaned_data['descripcionR']
+        rating = form.cleaned_data['califiqueR']
+        # ... procesás, guardás, etc.
+        Rating.objects.create( title=titulo , text=descripcion, rating=rating, usuario =usuario, evento=event)
+        return redirect('event_detail', id=idEvento)
+    else:
+        idEvento = request.POST.get('idEventoRating')
+        event = get_object_or_404(Event, pk=idEvento)
+        listaRating = Rating.objects.filter(evento=event)
+        for r in listaRating:
+            r.full_stars = range(r.rating)
+            r.empty_stars = range(5 - r.rating)
+        return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating })
+                                                         
+# aca meto mi magia
+@login_required
+def edicionRating(request, id):
+    rating = Rating.objects.get(id=id)
+    form = RatingForm(initial={'idEventoRating': rating.evento.pk,'tituloR': rating.title,
+    'descripcionR': rating.text, 'califiqueR': rating.rating })
+    rating.full_stars = range(rating.rating)
+    rating.empty_stars = range(5 - rating.rating)
+    return render(request, "rating/edicionRating.html", {"rating": rating, "form": form})
+
+@login_required
+def editarRating(request):
+    usuario = request.user
+    idRating = request.POST.get('idRating') 
+    form = RatingForm(request.POST)
+    if form.is_valid():
+        # Accedés a los datos con form.cleaned_data
+        r = get_object_or_404(Rating, id=idRating)
+        titulo = form.cleaned_data['tituloR']
+        descripcion = form.cleaned_data['descripcionR']
+        rating = form.cleaned_data['califiqueR']
+        r.title=titulo
+        r.text=descripcion
+        r.rating=rating 
+        r.save()
+        # ... procesás, guardás, etc.
+        return redirect("/rating")
+    else:
+        r = get_object_or_404(Rating, id=idRating)
+        return render(request, "rating/edicionRating.html", {"rating": r, "form": form})
+
+@login_required
+def eliminarRating(request, id):
+    rating = Rating.objects.get(id=id)
+    evento = rating.evento
+    rating.delete()
+
+   # messages.success(request, '¡Curso eliminado!')
+    if request.user.is_organizer:
+        return redirect('event_detail', id=evento.pk)
+    else:
+        return redirect("/rating")
+
+#Codigo de Rating - Fin

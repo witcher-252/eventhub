@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 
 class User(AbstractUser):
@@ -115,6 +116,7 @@ class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return self.title
+    
 class RefundRequest(models.Model):
     ticket_code = models.CharField(max_length=100)
     reason = models.TextField()
@@ -142,7 +144,18 @@ class Ticket(models.Model):
 
     def __str__(self):
         texto = "{0} ({1})"
-        return texto.format(self.ticket_code, self.buy_date)    
-    
+        return texto.format(self.ticket_code, self.buy_date)  
+
+class Rating(models.Model):
+    # title: string, text: string, rating: integer, created_at: datetime
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_ratings")
+    evento = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="organized_ratings")
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=30)
+    text = models.CharField (max_length=250)
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(5)])
+    created_at = models.DateTimeField(auto_now_add=True)  
+        
      
         
