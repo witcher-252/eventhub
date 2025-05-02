@@ -73,7 +73,7 @@ def events(request):
 @login_required
 def event_detail(request, id):
     event = get_object_or_404(Event, pk=id)
-    return render(request, "app/event_detail.html", {"event": event})
+    return render(request, "app/event_detail.html", {"event": event, "user_is_organizer": request.user.is_organizer})
 
 
 @login_required
@@ -141,7 +141,7 @@ def gestion_ticket(request, idEvento):
         tiene_eventos = Event.objects.filter(organizer=usuarioTk, pk=idEvento).exists()
         if not tiene_eventos:
              return render(request, "ticket/gestionTicket.html", {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer})
-        eventosOrg = usuarioTk.organized_events.all()
+        eventosOrg = usuarioTk.organized_events.filter(pk=idEvento)
         listaTickets = Ticket.objects.filter(evento__in=eventosOrg)
 
     return render(request, "ticket/gestionTicket.html", 
