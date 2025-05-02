@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Tickets{% endblock %}
+
+{% block content %}
+<div class="container"> 
+    <div class="row">
+
+        <div class="col-md-4 offset-md-4">
+            <div class="card-body">
+                <h5 class="card-title">Modificar Ticket</h5>
+                
+
+                <form action="/tickets/update" method="POST">{% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
+                </div>
+                </form>
+              </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
