@@ -133,6 +133,7 @@ def event_form(request, id=None):
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
 # codigo de Rating - inicio
+@login_required
 def inicio_rating(request):
     listaRating = Rating.objects.all()
 
@@ -142,6 +143,7 @@ def inicio_rating(request):
 
     return render(request, "rating/inicioRating.html", {"listaRating": listaRating})
 
+@login_required
 def formulario_rating(request):
     usuario = request.user
     form = RatingForm(request.POST)
@@ -165,26 +167,37 @@ def formulario_rating(request):
         return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating })
                                                          
 # aca meto mi magia
+@login_required
 def edicionRating(request, id):
     rating = Rating.objects.get(id=id)
-    return render(request, "rating/edicionRating.html", {"rating": rating})
+    form = RatingForm(initial={'idEventoRating': rating.evento.pk,'tituloR': rating.title,
+    'descripcionR': rating.text, 'califiqueR': rating.rating })
+    rating.full_stars = range(rating.rating)
+    rating.empty_stars = range(5 - rating.rating)
+    return render(request, "rating/edicionRating.html", {"rating": rating, "form": form})
 
-
+@login_required
 def editarRating(request):
-    titulo = request.POST['tituloR']
-    descripcion = request.POST['descripcionR']
-    rating = request.POST['califiqueR']
+    usuario = request.user
+    idRating = request.POST.get('idRating') 
+    form = RatingForm(request.POST)
+    if form.is_valid():
+        # Accedés a los datos con form.cleaned_data
+        r = get_object_or_404(Rating, id=idRating)
+        titulo = form.cleaned_data['tituloR']
+        descripcion = form.cleaned_data['descripcionR']
+        rating = form.cleaned_data['califiqueR']
+        r.title=titulo
+        r.text=descripcion
+        r.rating=rating 
+        r.save()
+        # ... procesás, guardás, etc.
+        return redirect("/rating")
+    else:
+        r = get_object_or_404(Rating, id=idRating)
+        return render(request, "rating/edicionRating.html", {"rating": r, "form": form})
 
-    rating = Rating.objects.get(rating=rating)
-    rating.title = titulo
-    rating.text = descripcion
-    rating.save()
-
-    #messages.success(request, '¡Comentario actualizado!')
-
-    return redirect("/rating")
-
-
+@login_required
 def eliminarRating(request, id):
     rating = Rating.objects.get(id=id)
     rating.delete()

@@ -6,35 +6,7 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-sm-12 col-md-6 col-lg-4 col-xl-4">
-            <div class="card-body">
-                <h5 class="card-title">Agregar Calificación</h5>
-                
 
-                <form action="/rating/crearRating" method="POST">{% csrf_token %}
-
-                    <label class="form-label">Ingrese Título</label>
-                    <div class="form-group">
-                        <input type="text" id="tituloR" name="tituloR">
-                    </div>
-
-                    <label class="form-label">Ingrese Descripción</label>
-                    <div class="form-group">
-                        <input type="text" id="descripcionR" name="descripcionR">
-                    </div>
-
-                    <label class="form-label">Califique</label>
-                    <div class="form-group">
-                        <input type="number" id="califiqueR" name="califiqueR" min="1" max="5" value="1"> 
-                    </div>
-                    
-                    <div class="form-group">
-                    <button type="submit" class="btn btn-success btn-block text-white">Guardar</button>
-                </div>
-                </form>
-              </div>
-            
-        </div>
         <div class="col-sm-12 col-md-6 col-lg-8 col-xl-8">
             <div class="table-responsive">
                 <table class="table table-striped table-bordered table-hover">

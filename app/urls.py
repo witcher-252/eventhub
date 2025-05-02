@@ -17,7 +17,7 @@ urlpatterns = [
     path("rating/", views.inicio_rating, name="inicio_rating"),
     # url formulario
     path("rating/crearRating", views.formulario_rating, name="formulario_rating"),
-    path('rating/editarRating/', views.editarRating, name="editarRating"),
+    path('rating/editarRating', views.editarRating, name="editarRating"),
     path('rating/eliminarRating/<id>', views.eliminarRating, name="eliminarRating"),
     path('rating/edicionRating/<id>', views.edicionRating, name="edicionRating")
 ]
