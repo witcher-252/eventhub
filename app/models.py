@@ -125,3 +125,24 @@ class RefundRequest(models.Model):
 
     def __str__(self):
         return f"Solicitud de devolución para el ticket {self.ticket_code} por {self.user.username}"
+
+# modelo para ticket
+class TicketType(models.TextChoices):
+        GENERAL = 'general', 'General'
+        VIP = 'VIP', 'VIP'
+
+class Ticket(models.Model):
+    # variables buy_date: date, ticket_code: string, quantity: integer, type : "general"| "VIP"
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_tickets")
+    evento = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="organized_tickets")
+    ticket_code = models.AutoField(primary_key=True)
+    quantity = models.PositiveIntegerField()
+    buy_date = models.DateTimeField()
+    type = models.CharField(max_length=10, choices=TicketType.choices, default=TicketType.GENERAL)
+
+    def __str__(self):
+        texto = "{0} ({1})"
+        return texto.format(self.ticket_code, self.buy_date)    
+    
+     
+        

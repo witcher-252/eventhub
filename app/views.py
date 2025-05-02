@@ -7,10 +7,11 @@ from django.core.paginator import Paginator
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-
-from .models import Event, User, RefundRequest, Notification, Comment
+from django.urls import reverse
+from .models import Event, User, Ticket, RefundRequest, Notification, Comment
+from .forms import CompraTicketForm, TicketForm
+from django.utils.timezone import localtime
 from .forms import RefundRequestForm, NotificationForm
-
 from django.db.models import Q
 
 
@@ -164,7 +165,7 @@ def events(request):
 @login_required
 def event_detail(request, id):
     event = get_object_or_404(Event, pk=id)
-    return render(request, "app/event_detail.html", {"event": event})
+    return render(request, "app/event_detail.html", {"event": event, "user_is_organizer": request.user.is_organizer})
 
 
 @login_required
@@ -206,7 +207,6 @@ def event_form(request, id=None):
         else:
             event = get_object_or_404(Event, pk=id)
             event.update(title, description, scheduled_at, request.user)
-
         return redirect("events")
 
     event = {}
@@ -218,7 +218,6 @@ def event_form(request, id=None):
         "app/event_form.html",
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
-
 # ---- Comments view ----
 
 @login_required
@@ -394,3 +393,101 @@ def refund_detail(request, id):
     return render(request, "refunds/refund_detail.html", {"refund": refund})
 
 
+
+# codigo de ticket - inicio
+
+@login_required
+def gestion_ticket(request, idEvento):
+    usuarioTk = request.user
+    listaTickets= None
+
+    event = get_object_or_404(Event, pk=idEvento)
+    if not usuarioTk.is_organizer:
+        listaTickets=Ticket.objects.filter(usuario=usuarioTk)
+    else:
+        tiene_eventos = Event.objects.filter(organizer=usuarioTk, pk=idEvento).exists()
+        if not tiene_eventos:
+             return render(request, "ticket/gestionTicket.html", {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer})
+        eventosOrg = usuarioTk.organized_events.filter(pk=idEvento)
+        listaTickets = Ticket.objects.filter(evento__in=eventosOrg)
+
+    return render(request, "ticket/gestionTicket.html", 
+                  {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer, "event": event})
+
+@login_required
+def create_ticket(request):
+
+    usuario = request.user
+    idEvento = request.POST['idEvento']
+    event = get_object_or_404(Event, pk=idEvento)
+    tipo = request.POST['tipoEntrada']
+    cantidad = request.POST['cantidadTk']
+    
+    Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
+    return redirect('gestion_ticket', idEvento= idEvento)
+
+@login_required
+def delete_ticket(request, id):
+    tk = get_object_or_404(Ticket, ticket_code=id)
+    evento = tk.evento
+    tk.delete()
+    return redirect('gestion_ticket', idEvento= evento.pk)
+
+
+
+@login_required
+def edit_ticket(request, id):
+    tk = get_object_or_404(Ticket, ticket_code=id)
+    form = TicketForm(initial={
+    'ticketCode': tk.ticket_code,
+    'buy_date': localtime(tk.buy_date).strftime('%Y-%m-%dT%H:%M'),
+    'cantidadTk': tk.quantity,
+    'tipoEntrada': tk.type,
+    })
+    return render(request, "ticket/edicionTicket.html",{ "form": form})
+
+@login_required
+def update_ticket(request):
+    form = TicketForm(request.POST)
+    if form.is_valid():
+              tipo = form.cleaned_data['tipoEntrada']
+              cantidad = form.cleaned_data['cantidadTk']
+              id = form.cleaned_data['ticketCode']
+              tk = get_object_or_404(Ticket, ticket_code=id)
+              tk.quantity = cantidad
+              tk.type = tipo
+              tk.save()
+              return redirect('gestion_ticket', idEvento= tk.evento.pk)
+    else:
+              id = request.POST.get('ticketCode')
+              tk = get_object_or_404(Ticket, ticket_code=id)
+              form = TicketForm(initial={'ticketCode': tk.ticket_code,'buy_date': localtime(tk.buy_date).strftime('%Y-%m-%dT%H:%M'),
+                'cantidadTk': tk.quantity,'tipoEntrada': tk.type})
+              return render(request, "ticket/edicionTicket.html",{ "form": form})
+
+@login_required
+def buy_ticket(request, idEvento):
+    event = get_object_or_404(Event, pk=idEvento)
+    form = CompraTicketForm(initial={'id_evento': event.pk})
+    return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event, "form": form})
+
+@login_required
+def confirm_ticket(request):
+    usuario = request.user
+    form = CompraTicketForm(request.POST)
+    if form.is_valid():
+        # Accedés a los datos con form.cleaned_data
+        id_evento = form.cleaned_data['id_evento']
+        event = get_object_or_404(Event, pk=id_evento)
+        cantidad = form.cleaned_data['cantidad']
+        tipo = form.cleaned_data['tipo']
+        # ... procesás, guardás, etc.
+        Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
+        return redirect('gestion_ticket', idEvento= id_evento)
+    else:
+        id_evento = request.POST.get('id_evento')
+        event = get_object_or_404(Event, pk=id_evento)
+        return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event, "form": form})
+    
+
+# codigo de ticket - fin

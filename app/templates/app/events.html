@@ -63,6 +63,14 @@
                                     </button>
                                 </form>
                             {% endif %}
+                            <!-- enlace a tickets -->
+                            <a href="{% url 'gestion_ticket' event.id %}"
+                               class="btn btn-sm btn-outline-primary"
+                               aria-label="Tickets"
+                               title="Tickets">
+                               <i class="bi bi-cart" aria-hidden="true"></i>
+                            </a>
+                            <!-- -->
                         </div>
                     </td>
                 </tr>
