@@ -27,4 +27,12 @@ urlpatterns = [
     path('notifications/detail/<int:pk>/', views.notification_detail, name='notification_detail'),
     path('notifications/edit/<int:pk>/', views.notification_edit, name='notification_edit'),
     path('notifications/delete/<int:pk>/', views.notification_delete, name='notification_delete'),
+    path('refunds/create/', views.refund_create, name='refund_create'),
+    path('refunds/', views.refund_list, name='refund_list'),
+    path('refunds/<int:id>/edit/', views.refund_edit, name='refund_edit'),
+    path('refunds/<int:id>/delete/', views.refund_delete, name='refund_delete'),
+    path('refund/<int:id>/accept/', views.refund_accept, name='refund_accept'),
+    path('refund/<int:id>/reject/', views.refund_reject, name='refund_reject'),
+    path('refund/<int:id>/', views.refund_detail, name='refund_detail'),
+
 ]

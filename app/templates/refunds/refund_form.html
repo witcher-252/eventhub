@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Solicitar Reembolso</h2>
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header fw-bold fs-5">
+                    Formulario de Solicitud
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info" role="alert">
+                        <i class="bi bi-info-circle-fill"></i> Puedes solicitar un reembolso hasta 48 horas antes del evento. Una vez procesada la solicitud, el reembolso se realizará en un plazo de 7 a 14 días hábiles.
+                    </div>
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="id_ticket_code" class="form-label fw-bold fs-6">Código de ticket</label>
+                            <input type="text" name="ticket_code" id="id_ticket_code" class="form-control" value="{{ form.ticket_code.value|default_if_none:'' }}">
+                            {% if form.ticket_code.errors %}
+                                <div class="text-danger">{{ form.ticket_code.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_reason" class="form-label fw-bold fs-6">Motivo del reembolso *</label>
+                            <textarea name="reason" id="id_reason" class="form-control" rows="4" placeholder="Escribe el motivo de tu solicitud de reembolso...">{{ form.reason.value|default_if_none:'' }}</textarea>
+                            {% if form.reason.errors %}
+                                <div class="text-danger">{{ form.reason.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="id_accept_policy" required>
+                            <label class="form-check-label" for="id_accept_policy">
+                                Entiendo y acepto la <a href="#">política de reembolsos</a>.
+                            </label>
+                        </div>
+                        
+                        <div class="text-center mt-6">
+                            <button type="submit" class="btn btn-primary w-50">Enviar Solicitud</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header fw-bold fs-5">
+                    Política de Reembolsos
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="text-success bi bi-check-circle-fill"></i> Reembolso del 100% hasta 7 días antes del evento.</li>
+                        <li><i class="text-success bi bi-check-circle-fill"></i> Reembolso del 50% entre 2 y 7 días antes del evento.</li>
+                        <li><i class="text-danger bi bi-x-circle-fill"></i> Sin reembolso a menos de 48 horas del evento.</li>
+                        <li><i class="text-primary bi bi-info-circle-fill"></i> El reembolso se realizará al mismo método de pago utilizado en la compra.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
