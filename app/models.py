@@ -75,6 +75,57 @@ class Event(models.Model):
         self.save()
 
 
+# === MODELOS DE COMMENTS ===
+class Comment(models.Model):
+    title = models.CharField(max_length=30) 
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    #Relaciona el comentario con un usuario
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="comments")
+    
+    #Relaciona el comentario con un evento
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="comments")
+
+    #Para visualizar el contenido de un comentario
+    def __str__(self):
+        return f"Comentario de {self.user.username} sobre {self.event.title}"
+
+
+    
+
+class Notification(models.Model):
+    
+    PRIORITY_HIGH = 'HIGH'
+    PRIORITY_MEDIUM = 'MEDIUM'
+    PRIORITY_LOW = 'LOW'
+
+    PRIORITY_CHOICES = [
+        (PRIORITY_HIGH, 'Alta'),
+        (PRIORITY_MEDIUM, 'Media'),
+        (PRIORITY_LOW, 'Baja'),
+    ]
+    title = models.CharField(max_length=255)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
+    is_read = models.BooleanField(default=False)
+
+    event = models.ForeignKey("Event", on_delete=models.CASCADE, null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    def __str__(self):
+        return self.title
+class RefundRequest(models.Model):
+    ticket_code = models.CharField(max_length=100)
+    reason = models.TextField()
+    approved = models.BooleanField(default=False)
+    approval_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"Solicitud de devolución para el ticket {self.ticket_code} por {self.user.username}"
+
 # modelo para ticket
 class TicketType(models.TextChoices):
         GENERAL = 'general', 'General'
