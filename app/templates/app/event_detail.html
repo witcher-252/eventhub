@@ -57,7 +57,12 @@
         <div style="max-height: 400px; overflow-y: auto;">
         <!-- Reseña 1 -->
         {% for r in ratings %}
-        <div class="review-box">
+        <div class="review-box position-relative">
+            {% if user_is_organizer %}
+            <a href="/rating/eliminarRating/{{r.id}}" class="text-danger position-absolute top-0 end-0 me-2 mt-2" title="Eliminar" onclick="return confirm('¿Estás seguro que querés eliminar este comentario?')">
+                <i class="bi bi-trash"></i> Eliminar
+            </a>
+            {% endif %}
             <strong>usuario : {{ r.usuario.username }}</strong><br>
             <small class="text-muted">fecha: {{ r.created_at }}</small>
             <h6 class="mt-2">{{ r.title }}</h6>
@@ -84,7 +89,7 @@
         
         
         
-        
+        {% if not user_is_organizer %}
         <form action="/rating/crearRating" method="POST">
             {% csrf_token %}
             
@@ -118,7 +123,8 @@
             </div>
           
             <button type="submit" class="btn btn-primary">Enviar calificación</button>
-          </form>   
+          </form> 
+          {% endif %}  
         </div>
 
 

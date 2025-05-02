@@ -79,7 +79,7 @@ def event_detail(request, id):
         r.full_stars = range(r.rating)
         r.empty_stars = range(5 - r.rating)
     # fin 
-    return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating })
+    return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating ,"user_is_organizer": request.user.is_organizer })
 
 @login_required
 def event_delete(request, id):
@@ -135,6 +135,8 @@ def event_form(request, id=None):
 # codigo de Rating - inicio
 @login_required
 def inicio_rating(request):
+    if request.user.is_organizer:
+        return redirect('events')
     listaRating = Rating.objects.all()
 
     for r in listaRating:
@@ -200,10 +202,13 @@ def editarRating(request):
 @login_required
 def eliminarRating(request, id):
     rating = Rating.objects.get(id=id)
+    evento = rating.evento
     rating.delete()
 
    # messages.success(request, '¡Curso eliminado!')
-
-    return redirect("/rating")
+    if request.user.is_organizer:
+        return redirect('event_detail', id=evento.pk)
+    else:
+        return redirect("/rating")
 
 #Codigo de Rating - Fin
