@@ -148,7 +148,10 @@ def login_view(request):
 
 
 def home(request):
-    return render(request, "home.html", {"user_is_organizer": request.user.is_organizer})
+    if request.user.is_authenticated:
+        return render(request, "home.html", {"user_is_organizer": request.user.is_organizer})
+    else:
+        return render(request, "home.html" )
 
 
 @login_required
