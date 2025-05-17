@@ -1,10 +1,10 @@
-from django.contrib import admin
+#from django.contrib import admin
 from django.contrib.auth.views import LogoutView
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("admin/", admin.site.urls),  # Añadir esta línea para que puedas acceder al admin
+    #path("admin/", admin.site.urls),  # Añadir esta línea para que puedas acceder al admin
     path("", views.home, name="home"),
     path("accounts/register/", views.register, name="register"),
     path("accounts/logout/", LogoutView.as_view(), name="logout"),
@@ -21,10 +21,12 @@ urlpatterns = [
     path('rating/editarRating', views.editarRating, name="editarRating"),
     path('rating/eliminarRating/<id>', views.eliminarRating, name="eliminarRating"),
     path('rating/edicionRating/<id>', views.edicionRating, name="edicionRating"),
+    #url comments
     path("comments/<int:event_id>/", views.comment, name="comments"),
     path('registrar_comentario/', views.registrar_comentario, name='registrar_comentario'),
     path('comments/<int:event_id>/deleteComment/<int:id>/', views.delete_comment, name='delete_comment'),
     path("comments/<int:event_id>/editComment/<int:comment_id>/", views.edit_comment, name="edit_comment"),
+   
     path('notifications/', views.notification_redirect, name='notification_redirect'),
     path('notifications/organizador/', views.notification_list, name='notification_list'),
     path('notificaciones/usuario/', views.notification_list_user, name='notification_list_user'),
