@@ -519,20 +519,24 @@ def formulario_rating(request):
         # Accedés a los datos con form.cleaned_data
         idEvento = form.cleaned_data['idEventoRating']
         event = get_object_or_404(Event, pk=idEvento)
-        titulo = form.cleaned_data['tituloR']
-        descripcion = form.cleaned_data['descripcionR']
-        rating = form.cleaned_data['califiqueR']
-        # ... procesás, guardás, etc.
-        Rating.objects.create( title=titulo , text=descripcion, rating=rating, usuario =usuario, evento=event)
-        return redirect('event_detail', id=idEvento)
+        if Rating.objects.filter(usuario=usuario, evento=event).exists():
+            form.add_error(None, "Ya has calificado este evento.")
+        else:    
+            titulo = form.cleaned_data['tituloR']
+            descripcion = form.cleaned_data['descripcionR']
+            rating = form.cleaned_data['califiqueR']
+            # ... procesás, guardás, etc.
+            Rating.objects.create( title=titulo , text=descripcion, rating=rating, usuario =usuario, evento=event)
+            return redirect('event_detail', id=idEvento)
     else:
         idEvento = request.POST.get('idEventoRating')
         event = get_object_or_404(Event, pk=idEvento)
-        listaRating = Rating.objects.filter(evento=event)
-        for r in listaRating:
-            r.full_stars = range(r.rating)
-            r.empty_stars = range(5 - r.rating)
-        return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating })
+
+    listaRating = Rating.objects.filter(evento=event)
+    for r in listaRating:
+        r.full_stars = range(r.rating)
+        r.empty_stars = range(5 - r.rating)
+    return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating })
                                                          
 # aca meto mi magia
 @login_required
