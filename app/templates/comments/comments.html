@@ -69,32 +69,32 @@
 
                         {% if c.user == request.user %}
                         <!-- Modal solo se incluye si el usuario es el autor del comentario -->
-                        <div class="modal fade" id="editCommentModal{{ c.id }}" tabindex="-1" aria-labelledby="editCommentModalLabel{{ c.id }}" aria-hidden="true">
-                          <div class="modal-dialog">
-                            <div class="modal-content">
-                              <form method="POST" action="{% url 'edit_comment' event.id c.id %}">
-                                {% csrf_token %}
-                                <div class="modal-header">
-                                  <h5 class="modal-title" id="editCommentModalLabel{{ c.id }}">Editar Comentario</h5>
-                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                                </div>
-                                <div class="modal-body">
-                                  <div class="mb-3">
-                                    <label for="title{{ c.id }}" class="form-label">Título</label>
-                                    <input type="text" class="form-control" id="title{{ c.id }}" name="title" value="{{ c.title }}">
-                                  </div>
-                                  <div class="mb-3">
-                                    <label for="text{{ c.id }}" class="form-label">Texto</label>
-                                    <textarea class="form-control" id="text{{ c.id }}" name="text" rows="3">{{ c.text }}</textarea>
-                                  </div>
-                                </div>
-                                <div class="modal-footer">
-                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                                  <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                                </div>
-                              </form>
+                    <div class="modal fade" id="editCommentModal{{ c.id }}" tabindex="-1" aria-labelledby="editCommentModalLabel{{ c.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form method="POST" action="{% url 'edit_comment' event.id c.id %}">
+                            {% csrf_token %}
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editCommentModalLabel{{ c.id }}">Editar Comentario</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                             </div>
-                          </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                <label for="title{{ c.id }}" class="form-label">Título</label>
+                                <input type="text" class="form-control" id="title{{ c.id }}" name="title" value="{{ c.title }}">
+                                </div>
+                                <div class="mb-3">
+                                <label for="text{{ c.id }}" class="form-label">Texto</label>
+                                <textarea class="form-control" id="text{{ c.id }}" name="text" rows="3">{{ c.text }}</textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+                            </form>
+                        </div>
+                        </div>
                         </div>
                         {% endif %}
 

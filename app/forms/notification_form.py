@@ -1,6 +1,7 @@
 from django import forms
-from ..models import Notification, Event
-from django.contrib.auth.models import User
+
+from ..models import Notification
+
 
 class NotificationForm(forms.ModelForm):
     destinatario_tipo = forms.ChoiceField(
@@ -15,8 +16,7 @@ class NotificationForm(forms.ModelForm):
     class Meta:
         model = Notification
         fields = ['title', 'message', 'priority', 'event', 'user', 'is_read']
-        
-             
+
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
             'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),

@@ -52,16 +52,13 @@
     </div>
 </div>
 
-<!--gerardo -->
-<!--fuente awesome para gerardo -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!--fin -->
+
 <script>
     document.querySelectorAll('.star-selectable i').forEach(star => {
       star.addEventListener('click', () => {
         const value = parseInt(star.dataset.value);  // valor de la estrella clickeada
         document.getElementById('califiqueR').value = value;  // actualiza el input hidden
-  
         // Cambiar visualmente las estrellas según el valor elegido
         const stars = star.parentElement.querySelectorAll('i');
         stars.forEach((s, i) => {
@@ -71,5 +68,5 @@
       });
     });
   </script>
-<!--fin gerardo -->
+
 {% endblock %}
