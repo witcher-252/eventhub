@@ -1,8 +1,9 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import models
 
 
+# === MODELOS PARA USERs ===
 class User(AbstractUser):
     is_organizer = models.BooleanField(default=False)
 
@@ -28,6 +29,7 @@ class User(AbstractUser):
         return errors
 
 
+# === MODELOS PARA EVENTs ===
 class Event(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -112,7 +114,7 @@ class Event(models.Model):
 
 
 
-# === MODELOS DE COMMENTS ===
+# === MODELOS PARA COMMENTs ===
 class Comment(models.Model):
     title = models.CharField(max_length=30) 
     text = models.TextField()
@@ -129,10 +131,8 @@ class Comment(models.Model):
         return f"Comentario de {self.user.username} sobre {self.event.title}"
 
 
-    
-
+# === MODELOS PARA NOTIFICATIONs ===
 class Notification(models.Model):
-    
     PRIORITY_HIGH = 'HIGH'
     PRIORITY_MEDIUM = 'MEDIUM'
     PRIORITY_LOW = 'LOW'
@@ -152,7 +152,9 @@ class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return self.title
-    
+
+
+# === MODELOS PARA REFUNDREQUESTs ===
 class RefundRequest(models.Model):
     ticket_code = models.CharField(max_length=100)
     reason = models.TextField()
@@ -164,7 +166,9 @@ class RefundRequest(models.Model):
     def __str__(self):
         return f"Solicitud de devolución para el ticket {self.ticket_code} por {self.user.username}"
 
-# modelo para ticket
+
+
+# === MODELOS PARA TICKETs ===
 class TicketType(models.TextChoices):
         GENERAL = 'general', 'General'
         VIP = 'VIP', 'VIP'
@@ -182,6 +186,8 @@ class Ticket(models.Model):
         texto = "{0} ({1})"
         return texto.format(self.ticket_code, self.buy_date)  
 
+
+# === MODELOS PARA RATINGs ===
 class Rating(models.Model):
     # title: string, text: string, rating: integer, created_at: datetime
     usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_ratings")
@@ -192,6 +198,4 @@ class Rating(models.Model):
     rating = models.PositiveSmallIntegerField(
         validators=[MinValueValidator(1), MaxValueValidator(5)])
     created_at = models.DateTimeField(auto_now_add=True)  
-        
-     
-        
+
