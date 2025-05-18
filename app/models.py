@@ -35,6 +35,7 @@ class Event(models.Model):
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_events")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    location = models.CharField(max_length=255)  # <--- NUEVO CAMPO
 
     def __str__(self):
         return self.title
@@ -73,7 +74,42 @@ class Event(models.Model):
         self.scheduled_at = scheduled_at or self.scheduled_at
         self.organizer = organizer or self.organizer
 
-        self.save()
+        # models.py
+
+from django.utils import timezone
+
+class Event(models.Model):
+    # ... campos anteriores ...
+    
+    def save(self, *args, **kwargs):
+        # Verificamos si ya existe (update)
+        if self.pk:
+            old_event = Event.objects.get(pk=self.pk)
+            fecha_cambiada = old_event.scheduled_at != self.scheduled_at
+            lugar_cambiado = old_event.location != self.location
+            super().save(*args, **kwargs)  # Guardamos primero el cambio
+
+            if fecha_cambiada or lugar_cambiado:
+                mensaje = "El evento ha sido modificado:\n"
+                if fecha_cambiada:
+                    mensaje += f"- Nueva fecha: {self.scheduled_at.strftime('%d/%m/%Y %H:%M')}\n"
+                if lugar_cambiado:
+                    mensaje += f"- Nuevo lugar: {self.location}"
+
+                # Notificar a todos los usuarios que tienen tickets
+                usuarios = User.objects.filter(organized_tickets__evento=self).distinct()
+                for usuario in usuarios:
+                    Notification.objects.create(
+                        title=f"Actualización del evento: {self.title}",
+                        message=mensaje,
+                        priority=Notification.PRIORITY_HIGH,
+                        user=usuario,
+                        event=self
+                    )
+        else:
+            # Si es nuevo, simplemente guardamos
+            super().save(*args, **kwargs)
+
 
 
 # === MODELOS DE COMMENTS ===
