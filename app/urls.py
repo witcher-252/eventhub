@@ -1,10 +1,9 @@
-#from django.contrib import admin
+
 from django.contrib.auth.views import LogoutView
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    #path("admin/", admin.site.urls),  # Añadir esta línea para que puedas acceder al admin
     path("", views.home, name="home"),
     path("accounts/register/", views.register, name="register"),
     path("accounts/logout/", LogoutView.as_view(), name="logout"),
