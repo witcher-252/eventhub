@@ -60,12 +60,6 @@
                                     </button>
                                 </form>
                             {% endif %}
-                            <form action="{% url 'refund_delete' refund.id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button class="btn btn-sm btn-outline-dark" type="submit" title="Eliminar" aria-label="Eliminar">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
                         {% else %}
                             <a href="{% url 'refund_detail' refund.id %}" class="btn btn-sm btn-outline-primary" title="Ver detalle" aria-label="Ver detalle">
                                 <i class="bi bi-eye"></i>

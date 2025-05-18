@@ -4,16 +4,17 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.urls import reverse
-from .models import Event, User, Ticket, RefundRequest, Notification, Comment, Rating
-from .forms import CompraTicketForm, TicketForm, RefundRequestForm, NotificationForm, RatingForm
 from django.utils.timezone import localtime
-from django.db.models import Q
+
+from .forms import CompraTicketForm, NotificationForm, RatingForm, RefundRequestForm, TicketForm
+from .models import Comment, Event, Notification, Rating, RefundRequest, Ticket, User
 
 
+# === CONTROLLERS PARA NOTIFICATIONS ===
 @login_required
 def notification_redirect(request):
     if request.user.is_organizer:
@@ -100,6 +101,8 @@ def notification_delete(request, pk):
         return redirect('notification_list')
     return render(request, 'notifications/delete.html', {'notification': notification})
 
+
+# === CONTROLLERS PARA USERS ===
 def register(request):
     if request.method == "POST":
         email = request.POST.get("email")
@@ -128,7 +131,6 @@ def register(request):
 
     return render(request, "accounts/register.html", {})
 
-
 def login_view(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -146,7 +148,6 @@ def login_view(request):
 
     return render(request, "accounts/login.html")
 
-
 def home(request):
     if request.user.is_authenticated:
         return render(request, "home.html", {"user_is_organizer": request.user.is_organizer})
@@ -154,6 +155,7 @@ def home(request):
         return render(request, "home.html" )
 
 
+# === CONTROLLERS PARA EVENTS ===
 @login_required
 def events(request):
     events = Event.objects.all().order_by("scheduled_at")
@@ -163,17 +165,14 @@ def events(request):
         {"events": events, "user_is_organizer": request.user.is_organizer},
     )
 
-
 @login_required
 def event_detail(request, id):
     event = get_object_or_404(Event, pk=id)
-    # creo formulario para rating - gerardo
     listaRating = Rating.objects.filter(evento=event)
     form = RatingForm(initial={'idEventoRating': event.pk})
     for r in listaRating:
-        r.full_stars = range(r.rating)
-        r.empty_stars = range(5 - r.rating)
-    # fin 
+        r.full_stars = range(r.rating) # type: ignore
+        r.empty_stars = range(5 - r.rating) # type: ignore
     return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating ,"user_is_organizer": request.user.is_organizer })
 
 @login_required
@@ -188,7 +187,6 @@ def event_delete(request, id):
         return redirect("events")
 
     return redirect("events")
-
 
 @login_required
 def event_form(request, id=None):
@@ -226,8 +224,9 @@ def event_form(request, id=None):
         "app/event_form.html",
         {"event": event, "user_is_organizer": request.user.is_organizer},
     )
-# ---- Comments view ----
 
+
+# === CONTROLLER PARA COMMENTS ===
 @login_required
 def comment(request, event_id):
     event = get_object_or_404(Event, pk=event_id)
@@ -264,7 +263,6 @@ def registrar_comentario(request):
 
         return redirect("comments", event_id=event.id) # type: ignore
     return HttpResponseBadRequest("Método no permitido.")
-
 
 @login_required
 def delete_comment(request, event_id, id):
@@ -305,6 +303,7 @@ def edit_comment(request, event_id, comment_id):
     return redirect('comments', event_id=event_id)
 
 
+# === CONTROLLERS PARA REFUNDREQUESTS ===
 @login_required
 def refund_create(request):
     if request.method == "POST":
@@ -319,7 +318,6 @@ def refund_create(request):
 
     return render(request, "refunds/refund_form.html", {"form": form})
 
-
 @login_required
 def refund_list(request):
     user_is_organizer = request.user.is_organizer
@@ -330,7 +328,6 @@ def refund_list(request):
         refunds = RefundRequest.objects.filter(user=request.user)
 
     return render(request, "refunds/refund_list.html", {"refunds": refunds, "user_is_organizer": user_is_organizer})
-
 
 @login_required
 def refund_edit(request, id):
@@ -344,7 +341,6 @@ def refund_edit(request, id):
         form = RefundRequestForm(instance=refund)
     return render(request, 'refunds/refund_edit.html', {'form': form})
 
-
 @login_required
 def refund_delete(request, id):
     if request.user.is_organizer:
@@ -356,7 +352,6 @@ def refund_delete(request, id):
         refund.delete()
         return redirect("refund_list")
     return redirect("refund_list")
-
 
 @login_required
 def refund_accept(request, id):
@@ -371,7 +366,6 @@ def refund_accept(request, id):
     refund.save()
 
     return redirect("refund_list")
-
 
 @login_required
 def refund_reject(request, id):
@@ -388,7 +382,6 @@ def refund_reject(request, id):
 
     return redirect("refund_list")
 
-
 @login_required
 def refund_detail(request, id):
     refund = get_object_or_404(RefundRequest, id=id)
@@ -401,9 +394,7 @@ def refund_detail(request, id):
     return render(request, "refunds/refund_detail.html", {"refund": refund})
 
 
-
-# codigo de ticket - inicio
-
+# === CONTROLLERS PARA TICKETS ===
 @login_required
 def gestion_ticket(request, idEvento):
     usuarioTk = request.user
@@ -415,16 +406,15 @@ def gestion_ticket(request, idEvento):
     else:
         tiene_eventos = Event.objects.filter(organizer=usuarioTk, pk=idEvento).exists()
         if not tiene_eventos:
-             return render(request, "ticket/gestionTicket.html", {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer})
+            return render(request, "ticket/gestionTicket.html", {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer})
         eventosOrg = usuarioTk.organized_events.filter(pk=idEvento)
         listaTickets = Ticket.objects.filter(evento__in=eventosOrg)
 
     return render(request, "ticket/gestionTicket.html", 
-                  {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer, "event": event})
+                {"listaTickets": listaTickets,"user_is_organizer": request.user.is_organizer, "event": event})
 
 @login_required
 def create_ticket(request):
-
     usuario = request.user
     idEvento = request.POST['idEvento']
     event = get_object_or_404(Event, pk=idEvento)
@@ -441,8 +431,6 @@ def delete_ticket(request, id):
     tk.delete()
     return redirect('gestion_ticket', idEvento= evento.pk)
 
-
-
 @login_required
 def edit_ticket(request, id):
     tk = get_object_or_404(Ticket, ticket_code=id)
@@ -458,20 +446,20 @@ def edit_ticket(request, id):
 def update_ticket(request):
     form = TicketForm(request.POST)
     if form.is_valid():
-              tipo = form.cleaned_data['tipoEntrada']
-              cantidad = form.cleaned_data['cantidadTk']
-              id = form.cleaned_data['ticketCode']
-              tk = get_object_or_404(Ticket, ticket_code=id)
-              tk.quantity = cantidad
-              tk.type = tipo
-              tk.save()
-              return redirect('gestion_ticket', idEvento= tk.evento.pk)
+            tipo = form.cleaned_data['tipoEntrada']
+            cantidad = form.cleaned_data['cantidadTk']
+            id = form.cleaned_data['ticketCode']
+            tk = get_object_or_404(Ticket, ticket_code=id)
+            tk.quantity = cantidad
+            tk.type = tipo
+            tk.save()
+            return redirect('gestion_ticket', idEvento= tk.evento.pk)
     else:
-              id = request.POST.get('ticketCode')
-              tk = get_object_or_404(Ticket, ticket_code=id)
-              form = TicketForm(initial={'ticketCode': tk.ticket_code,'buy_date': localtime(tk.buy_date).strftime('%Y-%m-%dT%H:%M'),
-                'cantidadTk': tk.quantity,'tipoEntrada': tk.type})
-              return render(request, "ticket/edicionTicket.html",{ "form": form})
+            id = request.POST.get('ticketCode')
+            tk = get_object_or_404(Ticket, ticket_code=id)
+            form = TicketForm(initial={'ticketCode': tk.ticket_code,'buy_date': localtime(tk.buy_date).strftime('%Y-%m-%dT%H:%M'),
+            'cantidadTk': tk.quantity,'tipoEntrada': tk.type})
+            return render(request, "ticket/edicionTicket.html",{ "form": form})
 
 @login_required
 def buy_ticket(request, idEvento):
@@ -484,21 +472,19 @@ def confirm_ticket(request):
     usuario = request.user
     form = CompraTicketForm(request.POST)
     if form.is_valid():
-        # Accedés a los datos con form.cleaned_data
         id_evento = form.cleaned_data['id_evento']
         event = get_object_or_404(Event, pk=id_evento)
         cantidad = form.cleaned_data['cantidad']
         tipo = form.cleaned_data['tipo']
-        # ... procesás, guardás, etc.
         Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
         return redirect('gestion_ticket', idEvento= id_evento)
     else:
         id_evento = request.POST.get('id_evento')
         event = get_object_or_404(Event, pk=id_evento)
         return render(request, "ticket/entrada.html", {"user_is_organizer": request.user.is_organizer, "evento":event, "form": form})
-    
 
-# codigo de ticket - fin# codigo de Rating - inicio
+
+# === CONTROLLERS PARA RATINGS ===
 @login_required
 def inicio_rating(request):
     if request.user.is_organizer:
@@ -506,8 +492,8 @@ def inicio_rating(request):
     listaRating = Rating.objects.filter(usuario=request.user)
 
     for r in listaRating:
-        r.full_stars = range(r.rating)
-        r.empty_stars = range(5 - r.rating)
+        r.full_stars = range(r.rating) # type: ignore
+        r.empty_stars = range(5 - r.rating) # type: ignore
 
     return render(request, "rating/inicioRating.html", {"listaRating": listaRating})
 
@@ -516,7 +502,6 @@ def formulario_rating(request):
     usuario = request.user
     form = RatingForm(request.POST)
     if form.is_valid():
-        # Accedés a los datos con form.cleaned_data
         idEvento = form.cleaned_data['idEventoRating']
         event = get_object_or_404(Event, pk=idEvento)
         if Rating.objects.filter(usuario=usuario, evento=event).exists():
@@ -525,7 +510,6 @@ def formulario_rating(request):
             titulo = form.cleaned_data['tituloR']
             descripcion = form.cleaned_data['descripcionR']
             rating = form.cleaned_data['califiqueR']
-            # ... procesás, guardás, etc.
             Rating.objects.create( title=titulo , text=descripcion, rating=rating, usuario =usuario, evento=event)
             return redirect('event_detail', id=idEvento)
     else:
@@ -534,27 +518,24 @@ def formulario_rating(request):
 
     listaRating = Rating.objects.filter(evento=event)
     for r in listaRating:
-        r.full_stars = range(r.rating)
-        r.empty_stars = range(5 - r.rating)
+        r.full_stars = range(r.rating) # type: ignore
+        r.empty_stars = range(5 - r.rating) # type: ignore
     return render(request, "app/event_detail.html", {"event": event, "form": form,  "ratings": listaRating })
-                                                         
-# aca meto mi magia
+
 @login_required
 def edicionRating(request, id):
     rating = Rating.objects.get(id=id)
     form = RatingForm(initial={'idEventoRating': rating.evento.pk,'tituloR': rating.title,
     'descripcionR': rating.text, 'califiqueR': rating.rating })
-    rating.full_stars = range(rating.rating)
-    rating.empty_stars = range(5 - rating.rating)
+    rating.full_stars = range(rating.rating) # type: ignore
+    rating.empty_stars = range(5 - rating.rating) # type: ignore
     return render(request, "rating/edicionRating.html", {"rating": rating, "form": form})
 
 @login_required
 def editarRating(request):
-    usuario = request.user
     idRating = request.POST.get('idRating') 
     form = RatingForm(request.POST)
     if form.is_valid():
-        # Accedés a los datos con form.cleaned_data
         r = get_object_or_404(Rating, id=idRating)
         titulo = form.cleaned_data['tituloR']
         descripcion = form.cleaned_data['descripcionR']
@@ -563,7 +544,6 @@ def editarRating(request):
         r.text=descripcion
         r.rating=rating 
         r.save()
-        # ... procesás, guardás, etc.
         return redirect("/rating")
     else:
         r = get_object_or_404(Rating, id=idRating)
@@ -575,10 +555,9 @@ def eliminarRating(request, id):
     evento = rating.evento
     rating.delete()
 
-   # messages.success(request, '¡Curso eliminado!')
     if request.user.is_organizer:
         return redirect('event_detail', id=evento.pk)
     else:
         return redirect("/rating")
 
-#Codigo de Rating - Fin
+

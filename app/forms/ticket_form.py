@@ -1,5 +1,6 @@
-from django import forms
 from datetime import datetime
+
+from django import forms
 
 
 class CompraTicketForm(forms.Form):
@@ -18,7 +19,7 @@ class CompraTicketForm(forms.Form):
     numero_tarjeta = forms.CharField(
         max_length=16,
         label='Número de Tarjeta',
-         widget=forms.TextInput(attrs={
+        widget=forms.TextInput(attrs={
         'class': 'form-control',
         'inputmode': 'numeric',  # Para mostrar teclado numérico en móviles
         'pattern': r'\d*',       # Solo dígitos
@@ -33,7 +34,7 @@ class CompraTicketForm(forms.Form):
     cvv = forms.CharField(
         max_length=4,
         label='CVV',
-         widget=forms.PasswordInput(attrs={
+        widget=forms.PasswordInput(attrs={
         'class': 'form-control',
         'inputmode': 'numeric',
         'pattern': r'\d{3,4}',
