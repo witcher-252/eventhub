@@ -35,10 +35,14 @@ def notification_list_user(request):
 
 @login_required
 def notification_list(request):
-    notifications = Notification.objects.all().select_related('user', 'event')
     q = request.GET.get('q')
     event_id = request.GET.get('event')
     priority = request.GET.get('priority')
+
+    noti_general = Notification.objects.filter(user__isnull=True).select_related('user', 'event')
+    noti_usuario = Notification.objects.filter(user=request.user).select_related('user', 'event')
+
+    notifications = (noti_general | noti_usuario).order_by('-created_at')
 
     if q:
         notifications = notifications.filter(title__icontains=q)
@@ -52,6 +56,7 @@ def notification_list(request):
         'notifications': notifications,
         'events': events
     })
+
     
 @login_required
 def mark_as_read(request, pk):
@@ -101,7 +106,7 @@ def notification_delete(request, pk):
         return redirect('notification_list')
     return render(request, 'notifications/delete.html', {'notification': notification})
 
-
+        
 # === CONTROLLERS PARA USERS ===
 def register(request):
     if request.method == "POST":
@@ -200,19 +205,97 @@ def event_form(request, id=None):
         description = request.POST.get("description")
         date = request.POST.get("date")
         time = request.POST.get("time")
+        location = request.POST.get("location")  # <-- NUEVO CAMPO
 
         [year, month, day] = date.split("-")
         [hour, minutes] = time.split(":")
-
+        #para saber cuando esta programado el evento
         scheduled_at = timezone.make_aware(
             datetime.datetime(int(year), int(month), int(day), int(hour), int(minutes))
         )
 
         if id is None:
-            Event.new(title, description, scheduled_at, request.user)
+            Event.objects.create(
+                title=title,
+                description=description,
+                scheduled_at=scheduled_at,
+                place=location,
+                organizer=request.user
+            )
         else:
             event = get_object_or_404(Event, pk=id)
-            event.update(title, description, scheduled_at, request.user)
+            event.title = title
+            event.description = description
+            event.scheduled_at = scheduled_at
+            event.place = location  # <-- NUEVO CAMPO
+            event.save()
+
+        return redirect("events")
+
+    event = {}
+    if id is not None:
+        event = get_object_or_404(Event, pk=id)
+
+    return render(
+        request,
+        "app/event_form.html",
+        {"event": event, "user_is_organizer": request.user.is_organizer},
+    )
+
+# === CONTROLLER PARA COMMENTS ===
+@login_required
+def comment(request, id=None):
+    user = request.user
+
+    if not user.is_organizer:
+        return redirect("events")
+
+    if request.method == "POST":
+        title = request.POST.get("title")
+        description = request.POST.get("description")
+        date = request.POST.get("date")
+        time = request.POST.get("time")
+        location = request.POST.get("location")  # <-- NUEVO CAMPO
+
+        [year, month, day] = date.split("-")
+        [hour, minutes] = time.split(":")
+        scheduled_at = timezone.make_aware(
+            datetime.datetime(int(year), int(month), int(day), int(hour), int(minutes))
+        )
+
+        if id is None:
+            Event.objects.create(
+                title=title,
+                description=description,
+                scheduled_at=scheduled_at,
+                place=location,
+                organizer=request.user
+            )
+            messages.success(request, "Evento creado correctamente.")
+        else:
+            event = get_object_or_404(Event, pk=id)
+            changed_fields = []
+            if event.scheduled_at != scheduled_at:
+                changed_fields.append("fecha")
+            if event.place != location:
+                changed_fields.append("lugar")
+
+            event.title = title
+            event.description = description
+            event.scheduled_at = scheduled_at
+            event.place = location
+            event.save()
+
+            if changed_fields:
+                campos = " y ".join(changed_fields)
+                messages.info(
+                    request,
+                    f"Has cambiado el {campos} del evento. Se notificará a los usuarios."
+                )
+                # Aquí podrías agregar lógica para enviar emails o crear notificaciones en BD
+            else:
+                messages.success(request, "Evento actualizado correctamente.")
+
         return redirect("events")
 
     event = {}
@@ -226,31 +309,12 @@ def event_form(request, id=None):
     )
 
 
-# === CONTROLLER PARA COMMENTS ===
-@login_required
-def comment(request, event_id):
-    event = get_object_or_404(Event, pk=event_id)
-    comments = Comment.objects.filter(event=event).order_by("-created_at")
-    
-    paginator = Paginator(comments, 20)
-    page_number = request.GET.get("page")
-    comments_page = paginator.get_page(page_number)
-    
-    return render(request, "comments/comments.html", {
-        "event": event,
-        "comments": comments_page
-    })
-
 @login_required
 def registrar_comentario(request):
     if request.method == 'POST':
+        event_id = request.POST.get('event_id')
         title = request.POST.get('title')
         text = request.POST.get('text')
-        event_id = request.POST.get('event_id')
-
-        if not event_id:
-            # Manejar el error si el event_id no se proporciona
-            return HttpResponseBadRequest("No se ha proporcionado el ID del evento.")
 
         event = get_object_or_404(Event, id=event_id)
 
@@ -261,46 +325,34 @@ def registrar_comentario(request):
             event=event
         )
 
-        return redirect("comments", event_id=event.id) # type: ignore
-    return HttpResponseBadRequest("Método no permitido.")
+        return redirect('event_detail', event.id)  
+    
 
 @login_required
-def delete_comment(request, event_id, id):
-    comment = get_object_or_404(Comment, id=id, event_id=event_id)
+def delete_comment(request, event_id, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id, event__id=event_id)
 
-    # Un usuario común puede eliminar su comentario; un organizador puede eliminar cualquier comentario
-    if not (request.user == comment.user or request.user.is_organizer):
-        return HttpResponseForbidden("No tenés permiso para eliminar este comentario.")
+    if request.user == comment.user or request.user.is_organizer:
+        comment.delete()
 
-    comment.delete()
-    messages.success(request, "Comentario eliminado con éxito.")
-    return redirect("comments", event_id=event_id)
-
+    return redirect('event_detail', event_id)  
 
 @login_required
 def edit_comment(request, event_id, comment_id):
     comment = get_object_or_404(Comment, id=comment_id, event__id=event_id)
 
-    # Solo el autor del comentario puede editarlo, siempre que NO sea organizador
-    if request.user.is_organizer or request.user != comment.user:
-        messages.error(request, "No tienes permiso para editar este comentario.")
-        return redirect('comments/comments', event_id=event_id)
+    # Solo el autor del comentario puede editar
+    if request.user != comment.user:
+        return redirect('event_detail', event_id)
 
     if request.method == 'POST':
-        title = request.POST.get('title')
-        text = request.POST.get('text')
+        comment.title = request.POST.get('title')
+        comment.text = request.POST.get('text')
+        comment.save()
+        return redirect('event_detail', event_id)
+    
 
-        if title and text:
-            comment.title = title
-            comment.text = text
-            comment.save()
-            messages.success(request, "Comentario actualizado correctamente.")
-        else:
-            messages.error(request, "Ambos campos son obligatorios.")
-
-        return redirect('comments', event_id=event_id)
-
-    return redirect('comments', event_id=event_id)
+    return render(request, 'edit_comment.html', {'comment': comment})
 
 
 # === CONTROLLERS PARA REFUNDREQUESTS ===

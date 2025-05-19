@@ -28,7 +28,6 @@ class User(AbstractUser):
 
         return errors
 
-
 # === MODELOS PARA EVENTs ===
 class Event(models.Model):
     title = models.CharField(max_length=200)
@@ -37,7 +36,7 @@ class Event(models.Model):
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_events")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    location = models.CharField(max_length=255)  # <--- NUEVO CAMPO
+    place = models.CharField(max_length=255, null=True, blank=True) # <--- NUEVO CAMPO
 
     def __str__(self):
         return self.title
@@ -55,7 +54,7 @@ class Event(models.Model):
         return errors
 
     @classmethod
-    def new(cls, title, description, scheduled_at, organizer):
+    def new(cls, title, description, scheduled_at, organizer, place=None):
         errors = Event.validate(title, description, scheduled_at)
 
         if len(errors.keys()) > 0:
@@ -66,52 +65,18 @@ class Event(models.Model):
             description=description,
             scheduled_at=scheduled_at,
             organizer=organizer,
+            place=place
         )
 
         return True, None
+
 
     def update(self, title, description, scheduled_at, organizer):
         self.title = title or self.title
         self.description = description or self.description
         self.scheduled_at = scheduled_at or self.scheduled_at
         self.organizer = organizer or self.organizer
-
-        # models.py
-
-from django.utils import timezone
-
-class Event(models.Model):
-    # ... campos anteriores ...
-    
-    def save(self, *args, **kwargs):
-        # Verificamos si ya existe (update)
-        if self.pk:
-            old_event = Event.objects.get(pk=self.pk)
-            fecha_cambiada = old_event.scheduled_at != self.scheduled_at
-            lugar_cambiado = old_event.location != self.location
-            super().save(*args, **kwargs)  # Guardamos primero el cambio
-
-            if fecha_cambiada or lugar_cambiado:
-                mensaje = "El evento ha sido modificado:\n"
-                if fecha_cambiada:
-                    mensaje += f"- Nueva fecha: {self.scheduled_at.strftime('%d/%m/%Y %H:%M')}\n"
-                if lugar_cambiado:
-                    mensaje += f"- Nuevo lugar: {self.location}"
-
-                # Notificar a todos los usuarios que tienen tickets
-                usuarios = User.objects.filter(organized_tickets__evento=self).distinct()
-                for usuario in usuarios:
-                    Notification.objects.create(
-                        title=f"Actualización del evento: {self.title}",
-                        message=mensaje,
-                        priority=Notification.PRIORITY_HIGH,
-                        user=usuario,
-                        event=self
-                    )
-        else:
-            # Si es nuevo, simplemente guardamos
-            super().save(*args, **kwargs)
-
+        self.save()
 
 
 # === MODELOS PARA COMMENTs ===
@@ -147,13 +112,15 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
     is_read = models.BooleanField(default=False)
-
+    read = models.BooleanField(default=False)  # NUEVO CAMPO 
+    
     event = models.ForeignKey("Event", on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return self.title
 
-
+        
+        
 # === MODELOS PARA REFUNDREQUESTs ===
 class RefundRequest(models.Model):
     ticket_code = models.CharField(max_length=100)

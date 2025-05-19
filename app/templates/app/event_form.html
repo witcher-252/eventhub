@@ -2,6 +2,21 @@
 
 {% block content %}
 <div class="container mt-5">
+
+    {# BLOQUE PARA MOSTRAR MENSAJES #}
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert 
+            {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {# FIN BLOQUE MENSAJES #}
+
     <div class="row">
         <div class="col-md-8 offset-md-2">
             <h1 class="mb-4">
@@ -14,7 +29,7 @@
 
             <div class="card">
                 <div class="card-body">
-                    <form action="{% url 'event_form' %}" method="POST">
+                    <form action="{% if event.id %}{% url 'event_edit' id=event.id %}{% else %}{% url 'event_form' %}{% endif %}" method="POST">
                         {% csrf_token %}
                         <div class="vstack gap-3">
                             <div>
@@ -35,6 +50,15 @@
                                     rows="4"
                                     required="">{{ event.description }}</textarea>
                             </div>
+                            <div>
+                                <label for="location" class="form-label">Ubicación</label>
+                                <input class="form-control"
+                                    id="location"
+                                    required=""
+                                    type="text"
+                                    value="{{ event.place }}"
+                                    name="location" />
+                            </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <label for="date" class="form-label">Fecha</label>
@@ -53,12 +77,18 @@
                                         id="time"
                                         required=""
                                         type="time"
-                                        value="{{ event.scheduled_at|date:'g:i'}}"
+                                        value="{{ event.scheduled_at|date:'H:i'}}"
                                         name="time" />
                                 </div>
                             </div>
                             <div>
-                                <button type="submit" class="btn btn-primary">Crear Evento</button>
+                                <button type="submit" class="btn btn-primary">
+                                    {% if event.id %}
+                                        Guardar Cambios
+                                    {% else %}
+                                        Crear Evento
+                                    {% endif %}
+                                </button>
                             </div>
                         </div>
                     </form>
