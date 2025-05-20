@@ -52,10 +52,14 @@ def notification_list(request):
         notifications = notifications.filter(priority=priority)
 
     events = Event.objects.all()
+    
     return render(request, 'notifications/list.html', {
         'notifications': notifications,
-        'events': events
+        'events': events,
     })
+    
+    
+
 
     
 @login_required

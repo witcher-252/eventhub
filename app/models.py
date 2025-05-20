@@ -111,8 +111,7 @@ class Notification(models.Model):
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
-    is_read = models.BooleanField(default=False)
-    read = models.BooleanField(default=False)  # NUEVO CAMPO 
+    is_read = models.BooleanField(default=False, null=True)
     
     event = models.ForeignKey("Event", on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
