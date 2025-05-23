@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.core.exceptions import ValidationError
 
 
 # === MODELOS PARA USERs ===
@@ -148,7 +149,12 @@ class Ticket(models.Model):
 
     def __str__(self):
         texto = "{0} ({1})"
-        return texto.format(self.ticket_code, self.buy_date)  
+        return texto.format(self.ticket_code, self.buy_date)
+    
+    def save(self, *args, **kwargs):
+        if self.quantity > 4:
+            raise ValidationError("No se puede comprar más de 4 tickets.")
+        super().save(*args, **kwargs)
 
 
 # === MODELOS PARA RATINGs ===
