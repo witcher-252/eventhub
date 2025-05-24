@@ -347,12 +347,13 @@ def refund_list(request):
 def refund_edit(request, id):
     refund = get_object_or_404(RefundRequest, pk=id, user=request.user)
     if request.method == 'POST':
-        form = RefundRequestForm(request.POST, instance=refund)
+        form = RefundRequestForm(request.POST, instance=refund, user=request.user)
         if form.is_valid():
             form.save()
+            messages.success(request, "La solicitud de reembolso fue actualizada.")
             return redirect('refund_list')
     else:
-        form = RefundRequestForm(instance=refund)
+        form = RefundRequestForm(instance=refund, user=request.user)
     return render(request, 'refunds/refund_edit.html', {'form': form})
 
 @login_required
@@ -369,31 +370,26 @@ def refund_delete(request, id):
 
 @login_required
 def refund_accept(request, id):
-    refund = get_object_or_404(RefundRequest, pk=id)
-
-    # Solo el organizador puede aprobar las devoluciones
-    if not request.user.is_organizer:
-        return redirect("refund_list")
-
-    refund.approved = True
-    refund.approval_date = timezone.now()  # Asignar fecha de aprobación
-    refund.save()
-
+    if request.method == "POST":
+        refund = get_object_or_404(RefundRequest, pk=id)
+        if not request.user.is_organizer:
+            return redirect("refund_list")
+        refund.status = 'aprobado'
+        refund.approval_date = timezone.now()
+        refund.save()
+        messages.success(request, f"La solicitud #{refund.id} fue aprobada.") # type: ignore
     return redirect("refund_list")
 
 @login_required
 def refund_reject(request, id):
-    refund = get_object_or_404(RefundRequest, pk=id)
-
-    # Solo el organizador puede rechazar devoluciones
-    if not request.user.is_organizer:
-        return redirect("refund_list")
-
     if request.method == "POST":
-        refund.approved = False
-        refund.approval_date = timezone.now()  # Registrar también la fecha del rechazo
+        refund = get_object_or_404(RefundRequest, pk=id)
+        if not request.user.is_organizer:
+            return redirect("refund_list")
+        refund.status = 'rechazado'
+        refund.approval_date = timezone.now()
         refund.save()
-
+        messages.warning(request, f"La solicitud #{refund.id} fue rechazada.") # type: ignore
     return redirect("refund_list")
 
 @login_required
