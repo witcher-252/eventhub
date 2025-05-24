@@ -120,16 +120,21 @@ class Notification(models.Model):
 
 # === MODELOS PARA REFUNDREQUESTs ===
 class RefundRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('aprobado', 'Aprobado'),
+        ('rechazado', 'Rechazado'),
+    ]
     ticket_code = models.CharField(max_length=100)
     reason = models.TextField()
     approved = models.BooleanField(default=False)
     approval_date = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pendiente')
 
     def __str__(self):
         return f"Solicitud de devolución para el ticket {self.ticket_code} por {self.user.username}"
-
 
 
 # === MODELOS PARA TICKETs ===
