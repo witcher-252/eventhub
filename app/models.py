@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
+from django.db.models import Avg
 
 # === MODELOS PARA USERs ===
 class User(AbstractUser):
@@ -77,6 +77,8 @@ class Event(models.Model):
 
         self.save()
 
+    def promedio_rating(self):
+        return self.organized_ratings.aggregate(promedio=Avg('rating'))['promedio'] or 0
 
 # === MODELOS PARA COMMENTs ===
 class Comment(models.Model):
