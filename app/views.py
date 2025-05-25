@@ -9,6 +9,8 @@ from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.timezone import localtime
+from django.utils.timezone import now
+
 from .forms import CompraTicketForm, NotificationForm, RatingForm, RefundRequestForm, TicketForm
 from .models import Comment, Event, Notification, Rating, RefundRequest, Ticket, User
 
@@ -157,7 +159,7 @@ def home(request):
 # === CONTROLLERS PARA EVENTS ===
 @login_required
 def events(request):
-    events = Event.objects.all().order_by("scheduled_at")
+    events = Event.objects.filter(scheduled_at__gte=now()).order_by("scheduled_at")
     return render(
         request,
         "app/events.html",
