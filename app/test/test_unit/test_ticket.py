@@ -2,7 +2,6 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 from ...models import Ticket, Event, User
 from django.utils import timezone
-from datetime import datetime
 
 class TicketModelTest(TestCase):
     def setUp(self):
@@ -15,7 +14,7 @@ class TicketModelTest(TestCase):
         self.event = Event.objects.create(
             title="Evento de prueba",
             description="Descripción del evento de prueba",
-            scheduled_at=datetime.now(),
+            scheduled_at=timezone.now(),
             organizer=self.user,
         )
 
@@ -24,7 +23,7 @@ class TicketModelTest(TestCase):
             usuario=self.user,
             evento=self.event,
             quantity=5,
-            buy_date=datetime.now(),
+            buy_date=timezone.now(),
             type="general"
         )
         with self.assertRaises(ValidationError) as context:
@@ -37,7 +36,7 @@ class TicketModelTest(TestCase):
             usuario=self.user,
             evento=self.event,
             quantity=3,
-            buy_date=datetime.now(),
+            buy_date=timezone.now(),
             type="general",
         )
         try:

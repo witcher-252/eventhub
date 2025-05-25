@@ -1,7 +1,6 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils import timezone
-from datetime import datetime
 from ...models import Event, Ticket, User
 
 class ConfirmTicketViewTest(TestCase):
@@ -25,7 +24,7 @@ class ConfirmTicketViewTest(TestCase):
         self.event = Event.objects.create(
             title="Evento de prueba",
             description="Descripción del evento de prueba",
-            scheduled_at=datetime.now(),
+            scheduled_at=timezone.now(),
             organizer=self.organizer,
         )
         self.url = reverse('confirm_ticket')  # Asegúrate que este nombre esté en tu urls.py
@@ -38,7 +37,7 @@ class ConfirmTicketViewTest(TestCase):
             'cantidad': 2,
             'tipo': 'general',
             'numero_tarjeta': '1234567812345678',
-            'expiracion': datetime.now().strftime('%m/%y'),
+            'expiracion': timezone.now().strftime('%m/%y'),
             'cvv': '123',
             'nombre_tarjeta': 'Juan Pérez',
             'acepta_terminos': True,
@@ -62,7 +61,7 @@ class ConfirmTicketViewTest(TestCase):
             'cantidad': 2,
             'tipo': 'general',
             'numero_tarjeta': '1234567812345678',
-            'expiracion': datetime.now().strftime('%m/%y'),
+            'expiracion': timezone.now().strftime('%m/%y'),
             'cvv': '123',
             'nombre_tarjeta': 'Juan Pérez',
             'acepta_terminos': True,
