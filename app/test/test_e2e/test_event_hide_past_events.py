@@ -13,7 +13,7 @@ class EventVisibilityE2ETest(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.driver = webdriver.Chrome()  # O webdriver.Firefox(), según lo que uses
+        cls.driver = webdriver.Chrome()  
         cls.driver.implicitly_wait(10)
 
     @classmethod
@@ -39,7 +39,7 @@ class EventVisibilityE2ETest(StaticLiveServerTestCase):
 
     def test_only_future_events_visible(self):
         # Iniciar sesión
-        self.driver.get(f"{self.live_server_url}/accounts/login/")  # Ajustá si tu login tiene otra URL
+        self.driver.get(f"{self.live_server_url}/accounts/login/") 
         self.driver.find_element(By.NAME, "username").send_keys("testuser")
         self.driver.find_element(By.NAME, "password").send_keys("12345")
         self.driver.find_element(By.NAME, "password").send_keys(Keys.RETURN)
