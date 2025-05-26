@@ -40,7 +40,7 @@ class RatingPromedioTest(BaseE2ETest):
 
         # Crear eventos de prueba
         # Evento 1
-        event_date1 = timezone.make_aware(datetime.datetime(2025, 2, 10, 10, 10))
+        event_date1 = timezone.make_aware(datetime.datetime(2026, 2, 10, 10, 10))
         self.event1 = Event.objects.create(
             title="Evento de prueba 1",
             description="Descripción del evento 1",
