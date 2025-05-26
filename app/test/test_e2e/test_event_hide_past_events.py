@@ -1,54 +1,50 @@
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
-from django.urls import reverse
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from django.utils.timezone import now
-from datetime import timedelta
-from django.contrib.auth import get_user_model
-from app.models import Event
-import time
+import datetime
+import re
 
-class EventVisibilityE2ETest(StaticLiveServerTestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.driver = webdriver.Chrome()  
-        cls.driver.implicitly_wait(10)
+from django.utils import timezone
+from playwright.sync_api import expect
 
-    @classmethod
-    def tearDownClass(cls):
-        cls.driver.quit()
-        super().tearDownClass()
+from app.models import Event, User
 
+from app.test.test_e2e.base import BaseE2ETest
+
+class EventVisibilityE2ETest(BaseE2ETest):
     def setUp(self):
-        User = get_user_model()
-        self.user = User.objects.create_user(username='testuser', password='12345')
+        super().setUp()
 
-        # Crear eventos
-        Event.objects.create(
-            title="Evento pasado",
-            scheduled_at=now() - timedelta(days=2),
-            organizer=self.user
-        )
-        Event.objects.create(
-            title="Evento futuro",
-            scheduled_at=now() + timedelta(days=2),
-            organizer=self.user
+        # Crear usuario organizador
+        self.organizer = User.objects.create_user(
+            username="organizador",
+            email="organizador@example.com",
+            password="password123",
+            is_organizer=True,
         )
 
+        # Crear eventos de prueba
+        # Evento 1
+        event_date1 = timezone.make_aware(datetime.datetime(2025, 2, 10, 10, 10))
+        self.event1 = Event.objects.create(
+            title="Evento Pasado",
+            description="Descripción del evento 1",
+            scheduled_at=event_date1,
+            organizer=self.organizer,
+        )
+
+        event_date1 = timezone.make_aware(datetime.datetime(2026, 2, 10, 10, 10))
+        self.event1 = Event.objects.create(
+            title="Evento Futuro",
+            description="Descripción del evento 1",
+            scheduled_at=event_date1,
+            organizer=self.organizer,
+        )
+    
     def test_only_future_events_visible(self):
-        # Iniciar sesión
-        self.driver.get(f"{self.live_server_url}/accounts/login/") 
-        self.driver.find_element(By.NAME, "username").send_keys("testuser")
-        self.driver.find_element(By.NAME, "password").send_keys("12345")
-        self.driver.find_element(By.NAME, "password").send_keys(Keys.RETURN)
+         # Iniciar sesión como organizador
+       self.login_user("organizador", "password123")
 
-        # Esperar y navegar a eventos
-        time.sleep(1)
-        self.driver.get(f"{self.live_server_url}{reverse('events')}")
+        # Ir a la página de eventos
+       self.page.goto(f"{self.live_server_url}/events/")
 
-        # Verificar que solo se vea el evento futuro
-        body_text = self.driver.find_element(By.TAG_NAME, "body").text
-        self.assertIn("Evento futuro", body_text)
-        self.assertNotIn("Evento pasado", body_text)
+       # Verificar que solo se vea el evento futuro
+       expect(self.page.get_by_text("Evento Futuro")).to_be_visible()
+       expect(self.page.get_by_text("Evento Pasado")).not_to_be_visible()
