@@ -4,11 +4,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.utils.timezone import localtime
+from django.utils.timezone import localtime, now
 
 from .forms import CompraTicketForm, NotificationForm, RatingForm, RefundRequestForm, TicketForm
 from .models import Comment, Event, Notification, Rating, RefundRequest, Ticket, User
@@ -25,7 +25,8 @@ def notification_redirect(request):
 @login_required
 def notification_list_user(request):
     notifications = Notification.objects.filter(
-        Q(user=request.user) | Q(user__isnull=True)
+        Q(user=request.user) |
+        Q(user__isnull=True, event__in=Ticket.objects.filter(usuario=request.user).values('evento'))
     ).select_related('event')
     unread_count = notifications.filter(is_read=False).count()
     return render(request, 'notifications/list_user.html', {
@@ -158,7 +159,7 @@ def home(request):
 # === CONTROLLERS PARA EVENTS ===
 @login_required
 def events(request):
-    events = Event.objects.all().order_by("scheduled_at")
+    events = Event.objects.filter(scheduled_at__gte=now()).order_by("scheduled_at")
     return render(
         request,
         "app/events.html",
@@ -195,34 +196,47 @@ def event_form(request, id=None):
     if not user.is_organizer:
         return redirect("events")
 
+    event = get_object_or_404(Event, pk=id) if id else None
+
     if request.method == "POST":
         title = request.POST.get("title")
         description = request.POST.get("description")
+        location = request.POST.get("location")
         date = request.POST.get("date")
         time = request.POST.get("time")
 
         [year, month, day] = date.split("-")
         [hour, minutes] = time.split(":")
-
         scheduled_at = timezone.make_aware(
             datetime.datetime(int(year), int(month), int(day), int(hour), int(minutes))
         )
 
-        if id is None:
-            Event.new(title, description, scheduled_at, request.user)
+        if event is None:
+            # Crear nuevo evento
+            Event.objects.create(
+                title=title,
+                description=description,
+                location=location,
+                scheduled_at=scheduled_at,
+                organizer=user,
+            )
         else:
-            event = get_object_or_404(Event, pk=id)
-            event.update(title, description, scheduled_at, request.user)
+            # Actualizar evento con notificación si corresponde
+            event.update_with_notification(
+                title=title,
+                description=description,
+                scheduled_at=scheduled_at,
+                location=location
+            )
+
         return redirect("events")
 
-    event = {}
-    if id is not None:
-        event = get_object_or_404(Event, pk=id)
-
+    # GET
+    context_event = event if event else {}
     return render(
         request,
         "app/event_form.html",
-        {"event": event, "user_is_organizer": request.user.is_organizer},
+        {"event": context_event, "user_is_organizer": user.is_organizer},
     )
 
 
@@ -275,7 +289,6 @@ def delete_comment(request, event_id, id):
     comment.delete()
     messages.success(request, "Comentario eliminado con éxito.")
     return redirect("comments", event_id=event_id)
-
 
 @login_required
 def edit_comment(request, event_id, comment_id):
@@ -454,12 +467,25 @@ def edit_ticket(request, id):
 
 @login_required
 def update_ticket(request):
+    usuario = request.user
     form = TicketForm(request.POST)
     if form.is_valid():
             tipo = form.cleaned_data['tipoEntrada']
             cantidad = form.cleaned_data['cantidadTk']
             id = form.cleaned_data['ticketCode']
             tk = get_object_or_404(Ticket, ticket_code=id)
+            event = tk.evento
+            
+            entradas_existentes = Ticket.objects.filter(
+            usuario=usuario,
+            evento=event).aggregate(total=Sum("quantity"))["total"] or 0
+
+            entradas_existentes = entradas_existentes - tk.quantity
+
+            if entradas_existentes + cantidad > 4:
+                form.add_error('cantidadTk',f"Ya has comprado {entradas_existentes + tk.quantity} entradas para este evento. "
+            f"Con esta compra ({cantidad - tk.quantity }) superarías el límite de 4 entradas.")
+                return render(request, "ticket/edicionTicket.html",{ "form": form})
             tk.quantity = cantidad
             tk.type = tipo
             tk.save()
@@ -486,6 +512,22 @@ def confirm_ticket(request):
         event = get_object_or_404(Event, pk=id_evento)
         cantidad = form.cleaned_data['cantidad']
         tipo = form.cleaned_data['tipo']
+
+        # Validación: no permitir más de 4 entradas por usuario por evento
+        entradas_existentes = Ticket.objects.filter(
+            usuario=usuario,
+            evento=event
+        ).aggregate(total=Sum("quantity"))["total"] or 0
+
+        if entradas_existentes + cantidad > 4:
+            form.add_error('cantidad',f"Ya has comprado {entradas_existentes} entradas para este evento. "
+            f"Con esta compra ({cantidad}) superarías el límite de 4 entradas.")
+            return render(request, "ticket/entrada.html", {
+                "user_is_organizer": usuario.is_organizer,
+                "evento": event,
+                "form": form
+            })
+        
         Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
         return redirect('gestion_ticket', idEvento= id_evento)
     else:
