@@ -81,7 +81,7 @@ class EventModelTest(TestCase):
         )
 
         self.assertFalse(success)
-        self.assertIn("title", errors)
+        self.assertIn("title", errors) # type: ignore
 
         # Verificar que no se creó ningún evento nuevo
         self.assertEqual(Event.objects.count(), initial_count)
@@ -140,3 +140,4 @@ class EventModelTest(TestCase):
         self.assertEqual(updated_event.title, original_title)
         self.assertEqual(updated_event.description, new_description)
         self.assertEqual(updated_event.scheduled_at, original_scheduled_at)
+
