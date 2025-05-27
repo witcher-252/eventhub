@@ -38,6 +38,15 @@
                             <h6 class="mb-0">Fecha y Hora</h6>
                             <p class="mb-0">{{ event.scheduled_at|date:"l, j \\d\\e F \\d\\e Y, H:i" }}</p>
                         </div>
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="bg-light rounded-circle p-2 me-3">
+                                <i class="bi bi-geo-alt text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Ubicación</h6>
+                                <p class="mb-0">{{ event.location }}</p>
+                            </div>
+                        </div>
                     </div>
                     <div class="d-flex align-items-center mb-3">
                         <div class="bg-light rounded-circle p-2 me-3">
@@ -64,12 +73,6 @@
         </div>
     </div>
 
-
-
-
-
-<!--gerardo -->
-
 <div class="card mt-3">
     <div class="card-body">
         <h4>Calificaciones y Reseñas ( {{ ratings|length }} )</h4>
@@ -93,20 +96,10 @@
                 <i class="bi bi-star" style="color: gold;"></i>
                 {% endfor %}
             </div>
-
-
-            <!--<div class="star-rating mb-2">
-                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-            </div>-->
-            
-            
-            
             <p>{{ r.text }}.</p>
         </div>        
         {% endfor %}
         </div>
-        
-        
         
         {% if not user_is_organizer %}
         <!-- Se muestran los errores de validación, Inicio-->
@@ -120,75 +113,53 @@
         <!-- Fin -->
         <form action="/rating/crearRating" method="POST">
             {% csrf_token %}
-            
             <div class="mb-2 mt-4">
-              <label class="form-label"><h5>{{ form.tituloR.label }}</h5></label>
-              {{ form.tituloR }}
-              {{ form.tituloR.errors }}
+                <label class="form-label"><h5>{{ form.tituloR.label }}</h5></label>
+                {{ form.tituloR }}
+                {{ form.tituloR.errors }}
             </div>
-          
             {{ form.idEventoRating }}
             
             <div class="mb-2">
               <label class="form-label">Tu calificación *</label>
-              <div class="star-rating star-selectable">
+                <div class="star-rating star-selectable">
                 <i class="far fa-star" data-value="1"></i>
                 <i class="far fa-star" data-value="2"></i>
                 <i class="far fa-star" data-value="3"></i>
                 <i class="far fa-star" data-value="4"></i>
                 <i class="far fa-star" data-value="5"></i>
-              </div>
-              <small class="form-text text-muted">Selecciona una calificación</small>
-              {{ form.califiqueR.errors }}
+                </div>
+                <small class="form-text text-muted">Selecciona una calificación</small>
+                {{ form.califiqueR.errors }}
             </div>
-          
             {{ form.califiqueR }}
-          
             <div class="mb-3">
-              <label class="form-label">{{ form.descripcionR.label }}</label>
-              {{ form.descripcionR }}
-              {{ form.descripcionR.errors }}
+                <label class="form-label">{{ form.descripcionR.label }}</label>
+                {{ form.descripcionR }}
+                {{ form.descripcionR.errors }}
             </div>
-          
             <button type="submit" class="btn btn-primary">Enviar calificación</button>
-          </form> 
-          {% endif %}  
+            </form> 
+            {% endif %}  
         </div>
-
-
     </div>
-
-    <!--fin gerardo -->
-
-
-
     </div>
-
-
-
-
-
 </div>
 
-<!--gerardo -->
-<!--fuente awesome para gerardo -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!--fin -->
+
 <script>
     document.querySelectorAll('.star-selectable i').forEach(star => {
-      star.addEventListener('click', () => {
-        const value = parseInt(star.dataset.value);  // valor de la estrella clickeada
-        document.getElementById('califiqueR').value = value;  // actualiza el input hidden
-  
-        // Cambiar visualmente las estrellas según el valor elegido
-        const stars = star.parentElement.querySelectorAll('i');
-        stars.forEach((s, i) => {
-          s.className = i < value ? 'fas fa-star' : 'far fa-star';
-          s.style = "color: gold;";
+        star.addEventListener('click', () => {
+            const value = parseInt(star.dataset.value);  // valor de la estrella clickeada
+            document.getElementById('califiqueR').value = value;  // actualiza el input hidden
+            // Cambiar visualmente las estrellas según el valor elegido
+            const stars = star.parentElement.querySelectorAll('i');
+            stars.forEach((s, i) => {
+            s.className = i < value ? 'fas fa-star' : 'far fa-star';
+            s.style = "color: gold;";
+            });
         });
-      });
-    });
-  </script>
-<!--fin gerardo -->
-
+        });
+</script>
 {% endblock %}

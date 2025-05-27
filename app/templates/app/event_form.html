@@ -4,7 +4,7 @@
 <div class="container mt-5">
     <div class="row">
         <div class="col-md-8 offset-md-2">
-            <h1 class="mb-4">
+            <h1 class="mb-4" id="edit-event-title" data-testid="form-title">
                 {% if event.id %}
                     Editar evento
                 {% else %}
@@ -14,7 +14,7 @@
 
             <div class="card">
                 <div class="card-body">
-                    <form action="{% url 'event_form' %}" method="POST">
+                    <form action="{% if event.id %}{% url 'event_edit' event.id %}{% else %}{% url 'event_form' %}{% endif %}" method="POST">
                         {% csrf_token %}
                         <div class="vstack gap-3">
                             <div>
@@ -24,7 +24,8 @@
                                     required=""
                                     type="text"
                                     value="{{ event.title }}"
-                                    name="title" />
+                                    name="title"
+                                    data-testid="event-title" />
                             </div>
                             <div>
                                 <label for="description" class="form-label">Descripción</label>
@@ -44,21 +45,42 @@
                                         required=""
                                         type="date"
                                         value="{{ event.scheduled_at|date:'Y-m-d'}}"
-                                        name="date" />
+                                        name="date" 
+                                        data-testid="event-date" />
                                 </div>
                                 <div class="col-md-6">
                                     <label for="time" class="form-label">Hora</label>
                                     <input
                                         class="form-control"
                                         id="time"
-                                        required=""
+                                        required
                                         type="time"
-                                        value="{{ event.scheduled_at|date:'g:i'}}"
-                                        name="time" />
+                                        value="{{ event.scheduled_at|date:'H:i'}}"
+                                        name="time"
+                                        data-testid="event-time"
+                                    />
+                                </div>
+                                <div>
+                                    <label for="location" class="form-label">Lugar</label>
+                                    <input
+                                        class="form-control"
+                                        id="location"
+                                        required
+                                        type="text"
+                                        value="{{ event.location }}"
+                                        name="location"
+                                        data-testid="event-location"
+                                    />
                                 </div>
                             </div>
                             <div>
-                                <button type="submit" class="btn btn-primary">Crear Evento</button>
+                                <button type="submit" class="btn btn-primary" data-testid="submit-button">
+                                    {% if event.id %}
+                                        Editar Evento
+                                    {% else %}
+                                        Crear Evento
+                                    {% endif %}
+                                </button>
                             </div>
                         </div>
                     </form>

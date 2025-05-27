@@ -1,5 +1,4 @@
 import datetime
-import time
 
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -197,6 +196,7 @@ class EventFormSubmissionTest(BaseEventTestCase):
             "description": "Descripción del nuevo evento",
             "date": "2025-05-01",
             "time": "14:30",
+            "location": "Centro Cultural Borges",
         }
 
         # Hacer petición POST a la vista event_form
@@ -228,6 +228,7 @@ class EventFormSubmissionTest(BaseEventTestCase):
             "description": "Nueva descripción actualizada",
             "date": "2025-06-15",
             "time": "16:45",
+            "location": "Nueva locacion",
         }
 
         # Hacer petición POST para editar el evento
@@ -331,5 +332,3 @@ class EventDeleteViewTest(BaseEventTestCase):
 
         # Verificar que el evento sigue existiendo
         self.assertTrue(Event.objects.filter(pk=self.event1.id).exists()) # type: ignore
-
-

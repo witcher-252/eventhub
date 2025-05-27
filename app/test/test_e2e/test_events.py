@@ -5,7 +5,6 @@ from django.utils import timezone
 from playwright.sync_api import expect
 
 from app.models import Event, User
-
 from app.test.test_e2e.base import BaseE2ETest
 
 
@@ -83,13 +82,13 @@ class EventBaseTest(BaseE2ETest):
         delete_form = row0.locator("form")
 
         expect(detail_button).to_be_visible()
-        expect(detail_button).to_have_attribute("href", f"/events/{self.event1.id}/")
+        expect(detail_button).to_have_attribute("href", f"/events/{self.event1.id}/") # type: ignore
 
         if user_type == "organizador":
             expect(edit_button).to_be_visible()
-            expect(edit_button).to_have_attribute("href", f"/events/{self.event1.id}/edit/")
+            expect(edit_button).to_have_attribute("href", f"/events/{self.event1.id}/edit/") # type: ignore
 
-            expect(delete_form).to_have_attribute("action", f"/events/{self.event1.id}/delete/")
+            expect(delete_form).to_have_attribute("action", f"/events/{self.event1.id}/delete/") # type: ignore
             expect(delete_form).to_have_attribute("method", "POST")
 
             delete_button = delete_form.get_by_role("button", name="Eliminar")
@@ -225,6 +224,7 @@ class EventCRUDTest(EventBaseTest):
         self.page.get_by_label("Descripción").fill("Descripción creada desde prueba E2E")
         self.page.get_by_label("Fecha").fill("2026-06-15")
         self.page.get_by_label("Hora").fill("16:45")
+        self.page.get_by_label("Lugar").fill("Auditorio UTN")
 
         # Enviar el formulario
         self.page.get_by_role("button", name="Crear Evento").click()
@@ -253,7 +253,7 @@ class EventCRUDTest(EventBaseTest):
         self.page.get_by_role("link", name="Editar").first.click()
 
         # Verificar que estamos en la página de edición
-        expect(self.page).to_have_url(f"{self.live_server_url}/events/{self.event1.id}/edit/")
+        expect(self.page).to_have_url(f"{self.live_server_url}/events/{self.event1.id}/edit/") # type: ignore
 
         header = self.page.locator("h1")
         expect(header).to_have_text("Editar evento")
@@ -275,9 +275,13 @@ class EventCRUDTest(EventBaseTest):
         time = self.page.get_by_label("Hora")
         expect(time).to_have_value("10:10")
         time.fill("03:00")
+        
+        location = self.page.get_by_label("Lugar")
+        expect(location).to_have_value("Por definir")
+        location.fill("Otro lugar")
 
         # Enviar el formulario
-        self.page.get_by_role("button", name="Crear Evento").click()
+        self.page.get_by_role("button", name="Editar Evento").click()
 
         # Verificar que redirigió a la página de eventos
         expect(self.page).to_have_url(f"{self.live_server_url}/events/")
