@@ -49,4 +49,43 @@ class RefundRequestIntegrationTest(TestCase):
         messages = list(response.context["messages"])
         self.assertIn("Ya tienes una solicitud de reembolso pendiente.", [str(msg) for msg in messages])
 
+    def test_integration_user_can_create_refund_if_none_pending(self):
+        # Eliminamos la solicitud pendiente creada en setUp
+        RefundRequest.objects.all().delete()
+
+        form_data = {
+            "ticket_code": str(self.ticket.ticket_code),
+            "reason": "Motivo válido de integración"
+        }
+        response = self.client.post(reverse("refund_create"), data=form_data, follow=True)
+
+        self.assertRedirects(response, reverse("refund_list"))
+        self.assertTrue(RefundRequest.objects.filter(user=self.user, reason="Motivo válido de integración").exists())
+        messages = list(response.context["messages"])
+        self.assertIn("Tu solicitud de reembolso fue enviada con éxito.", [str(msg) for msg in messages])
+
+    def test_integration_refund_fails_with_invalid_ticket_code(self):
+        # Asegura que no haya solicitudes pendientes para que no redirija
+        RefundRequest.objects.all().delete()
+
+        form_data = {
+            "ticket_code": "99999999",  # Código inválido
+            "reason": "Motivo válido"
+        }
+
+        response = self.client.post(reverse("refund_create"), data=form_data)
+        
+        # Verifica que NO redirige (sigue en el formulario)
+        self.assertEqual(response.status_code, 200)
+
+        # Asegura que el formulario esté presente en el contexto
+        self.assertIn("form", response.context)
+
+        form = response.context["form"]
+        self.assertFalse(form.is_valid())
+        self.assertIn("ticket_code", form.errors)
+        self.assertIn(
+            "El ticket ingresado no existe o no pertenece a tu cuenta.",
+            form.errors["ticket_code"]
+        )
 

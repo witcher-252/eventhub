@@ -38,11 +38,11 @@
 
         <div class="mb-3">
             <strong>Estado:</strong> 
-            {% if not refund.approval_date %}
+            {% if refund.status == 'pendiente' %}
                 <span class="badge bg-warning text-dark">Pendiente</span>
-            {% elif refund.approved %}
+            {% elif refund.status == 'aprobado' %}
                 <span class="badge bg-success">Aprobado</span>
-            {% else %}
+            {% elif refund.status == 'rechazado' %}
                 <span class="badge bg-danger">Rechazado</span>
             {% endif %}
         </div>

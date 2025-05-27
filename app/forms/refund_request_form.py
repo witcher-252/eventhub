@@ -12,7 +12,6 @@ class RefundRequestForm(forms.ModelForm):
             'reason': forms.Textarea(attrs={'class': 'form-control', 'placeholder': 'Motivo de la devolución'}),
         }
 
-    # Validación para 'ticket_code'
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)  # Capturamos el usuario desde la vista
         super().__init__(*args, **kwargs)
@@ -32,7 +31,6 @@ class RefundRequestForm(forms.ModelForm):
 
         return ticket_code
 
-    # Validación para 'reason'
     def clean_reason(self):
         reason = self.cleaned_data.get('reason')
         if not reason:
@@ -40,3 +38,17 @@ class RefundRequestForm(forms.ModelForm):
         if len(reason) < 10:
             raise forms.ValidationError("El motivo debe tener al menos 10 caracteres.")
         return reason
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if self.user:
+            # Validar si ya existe otra solicitud pendiente del mismo usuario
+            # Excluimos el propio objeto si estamos en edición
+            queryset = RefundRequest.objects.filter(user=self.user, status='pendiente')
+            if self.instance.pk:
+                queryset = queryset.exclude(pk=self.instance.pk)
+            if queryset.exists():
+                raise forms.ValidationError("Ya tienes una solicitud de reembolso pendiente.")
+        return cleaned_data
+
+

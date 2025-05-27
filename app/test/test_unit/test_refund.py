@@ -1,19 +1,17 @@
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
-from django.urls import reverse
+from django.test import TestCase
 from django.utils.timezone import make_aware
 
+from app.forms.refund_request_form import RefundRequestForm
 from app.models import Event, RefundRequest, Ticket
 
 User = get_user_model()
 
-class RefundRequestViewTest(TestCase):
+class RefundRequestFormTest(TestCase):
     def setUp(self):
-        self.client = Client()
         self.user = User.objects.create_user(username="testuser", password="testpass")
-        self.client.login(username="testuser", password="testpass")
 
         self.event = Event.objects.create(
             title="Test Event",
@@ -30,27 +28,39 @@ class RefundRequestViewTest(TestCase):
             type="general"
         )
 
-        # Crear una solicitud de reembolso pendiente existente
+        # Solicitud ya pendiente
         RefundRequest.objects.create(
             ticket_code=self.ticket.ticket_code,
-            reason="Motivo de prueba",
+            reason="Motivo existente",
             user=self.user,
             status="pendiente"
         )
 
-    def test_create_refund_fails_if_pending_exists(self):
-        response = self.client.post(reverse("refund_create"), {
-            "ticket_code": self.ticket.ticket_code,
-            "reason": "Otro motivo"
-        })
+    def test_refund_form_fails_if_pending_exists(self):
+        form_data = {
+            "ticket_code": str(self.ticket.ticket_code),
+            "reason": "Motivo válido de prueba"
+        }
+        form = RefundRequestForm(data=form_data, user=self.user)
+        self.assertFalse(form.is_valid())
+        self.assertIn("Ya tienes una solicitud de reembolso pendiente.", form.non_field_errors())
 
-        # Verifica redirección a refund_list porque ya tiene una solicitud pendiente
-        self.assertRedirects(response, reverse("refund_list"))
+    def test_refund_form_valid_if_no_pending_request(self):
+        # Eliminamos la solicitud pendiente
+        RefundRequest.objects.all().delete()
 
-        # Verifica que NO se haya creado una segunda solicitud
-        self.assertEqual(RefundRequest.objects.filter(user=self.user).count(), 1)
+        form_data = {
+            "ticket_code": str(self.ticket.ticket_code),
+            "reason": "Motivo válido de prueba con más de 10 caracteres"
+        }
+        form = RefundRequestForm(data=form_data, user=self.user)
+        self.assertTrue(form.is_valid())
 
-        # Verifica que se haya mostrado el mensaje de advertencia
-        messages = list(response.wsgi_request._messages)
-        self.assertEqual(len(messages), 1)
-        self.assertEqual(str(messages[0]), "Ya tienes una solicitud de reembolso pendiente.")
+    def test_refund_form_fails_with_invalid_ticket_code(self):
+        form_data = {
+            "ticket_code": "999999",  # Un código que no existe
+            "reason": "Motivo válido"
+        }
+        form = RefundRequestForm(data=form_data, user=self.user)
+        self.assertFalse(form.is_valid())
+        self.assertIn("El ticket ingresado no existe o no pertenece a tu cuenta.", form.errors["ticket_code"])
