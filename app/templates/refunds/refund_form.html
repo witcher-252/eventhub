@@ -2,6 +2,14 @@
 
 {% block content %}
 <div class="container mt-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
     <h2 class="mb-4">Solicitar Reembolso</h2>
     <div class="row">
         <div class="col-md-8">
@@ -13,12 +21,12 @@
                     <div class="alert alert-info" role="alert">
                         <i class="bi bi-info-circle-fill"></i> Puedes solicitar un reembolso hasta 48 horas antes del evento. Una vez procesada la solicitud, el reembolso se realizará en un plazo de 7 a 14 días hábiles.
                     </div>
-                    <form method="POST">
+                    <form method="POST" id="refund-form">
                         {% csrf_token %}
                         
                         <div class="mb-3">
                             <label for="id_ticket_code" class="form-label fw-bold fs-6">Código de ticket</label>
-                            <input type="text" name="ticket_code" id="id_ticket_code" class="form-control" value="{{ form.ticket_code.value|default_if_none:'' }}">
+                            <input type="number" name="ticket_code" id="id_ticket_code" class="form-control" value="{{ form.ticket_code.value|default_if_none:'' }}" min="1" step="1" data-testid="input-ticket-code">
                             {% if form.ticket_code.errors %}
                                 <div class="text-danger">{{ form.ticket_code.errors }}</div>
                             {% endif %}
@@ -41,7 +49,7 @@
                         </div>
                         
                         <div class="text-center mt-6">
-                            <button type="submit" class="btn btn-primary w-50">Enviar Solicitud</button>
+                            <button type="submit" class="btn btn-primary w-50" id="btn-submit-refund">Enviar Solicitud</button>
                         </div>
                     </form>
                 </div>
