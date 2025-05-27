@@ -98,6 +98,7 @@ class TicketForm(forms.Form):
     )
     
     cantidadTk = forms.IntegerField(
+        min_value=1,
         label="Ingrese la cantidad",
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
