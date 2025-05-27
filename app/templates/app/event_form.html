@@ -2,24 +2,9 @@
 
 {% block content %}
 <div class="container mt-5">
-
-    {# BLOQUE PARA MOSTRAR MENSAJES #}
-    {% if messages %}
-    <div class="container mt-3">
-        {% for message in messages %}
-        <div class="alert 
-            {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    {# FIN BLOQUE MENSAJES #}
-
     <div class="row">
         <div class="col-md-8 offset-md-2">
-            <h1 class="mb-4">
+            <h1 class="mb-4" id="edit-event-title" data-testid="form-title">
                 {% if event.id %}
                     Editar evento
                 {% else %}
@@ -29,7 +14,7 @@
 
             <div class="card">
                 <div class="card-body">
-                    <form action="{% if event.id %}{% url 'event_edit' id=event.id %}{% else %}{% url 'event_form' %}{% endif %}" method="POST">
+                    <form action="{% if event.id %}{% url 'event_edit' event.id %}{% else %}{% url 'event_form' %}{% endif %}" method="POST">
                         {% csrf_token %}
                         <div class="vstack gap-3">
                             <div>
@@ -39,7 +24,8 @@
                                     required=""
                                     type="text"
                                     value="{{ event.title }}"
-                                    name="title" />
+                                    name="title"
+                                    data-testid="event-title" />
                             </div>
                             <div>
                                 <label for="description" class="form-label">Descripción</label>
@@ -50,15 +36,6 @@
                                     rows="4"
                                     required="">{{ event.description }}</textarea>
                             </div>
-                            <div>
-                                <label for="location" class="form-label">Ubicación</label>
-                                <input class="form-control"
-                                    id="location"
-                                    required=""
-                                    type="text"
-                                    value="{{ event.place }}"
-                                    name="location" />
-                            </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <label for="date" class="form-label">Fecha</label>
@@ -68,23 +45,38 @@
                                         required=""
                                         type="date"
                                         value="{{ event.scheduled_at|date:'Y-m-d'}}"
-                                        name="date" />
+                                        name="date" 
+                                        data-testid="event-date" />
                                 </div>
                                 <div class="col-md-6">
                                     <label for="time" class="form-label">Hora</label>
                                     <input
                                         class="form-control"
                                         id="time"
-                                        required=""
+                                        required
                                         type="time"
                                         value="{{ event.scheduled_at|date:'H:i'}}"
-                                        name="time" />
+                                        name="time"
+                                        data-testid="event-time"
+                                    />
+                                </div>
+                                <div>
+                                    <label for="location" class="form-label">Lugar</label>
+                                    <input
+                                        class="form-control"
+                                        id="location"
+                                        required
+                                        type="text"
+                                        value="{{ event.location }}"
+                                        name="location"
+                                        data-testid="event-location"
+                                    />
                                 </div>
                             </div>
                             <div>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" data-testid="submit-button">
                                     {% if event.id %}
-                                        Guardar Cambios
+                                        Editar Evento
                                     {% else %}
                                         Crear Evento
                                     {% endif %}

@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Avg
 
 
 # === MODELOS PARA USERs ===
@@ -28,6 +30,7 @@ class User(AbstractUser):
 
         return errors
 
+
 # === MODELOS PARA EVENTs ===
 class Event(models.Model):
     title = models.CharField(max_length=200)
@@ -36,7 +39,7 @@ class Event(models.Model):
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="organized_events")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    place = models.CharField(max_length=255, null=True, blank=True) # <--- NUEVO CAMPO
+    location = models.CharField(max_length=255, default="Por definir")
 
     def __str__(self):
         return self.title
@@ -54,7 +57,7 @@ class Event(models.Model):
         return errors
 
     @classmethod
-    def new(cls, title, description, scheduled_at, organizer, place=None):
+    def new(cls, title, description, scheduled_at, organizer):
         errors = Event.validate(title, description, scheduled_at)
 
         if len(errors.keys()) > 0:
@@ -65,18 +68,49 @@ class Event(models.Model):
             description=description,
             scheduled_at=scheduled_at,
             organizer=organizer,
-            place=place
         )
 
         return True, None
-
 
     def update(self, title, description, scheduled_at, organizer):
         self.title = title or self.title
         self.description = description or self.description
         self.scheduled_at = scheduled_at or self.scheduled_at
         self.organizer = organizer or self.organizer
+
         self.save()
+
+    def promedio_rating(self):
+        return self.organized_ratings.aggregate(promedio=Avg('rating'))['promedio'] or 0 # type: ignore
+    
+    def update_with_notification(self, title, description, scheduled_at, location):
+        # Obtener valores originales desde la base de datos
+        original = Event.objects.get(pk=self.pk)
+
+        fecha_cambiada = original.scheduled_at.replace(second=0, microsecond=0) != scheduled_at.replace(second=0, microsecond=0)
+        lugar_cambiado = original.location != location
+
+        # Actualizar los campos
+        self.title = title or self.title
+        self.description = description or self.description
+        self.scheduled_at = scheduled_at or self.scheduled_at
+        self.location = location or self.location
+        self.save()
+
+        if (fecha_cambiada or lugar_cambiado) and Ticket.objects.filter(evento=self).exists():
+            Notification.objects.create(
+                title=f"Actualización del evento: {self.title}",
+                message=f"El evento fue actualizado. "
+                        f"{'La fecha ha cambiado. ' if fecha_cambiada else ''}"
+                        f"{'El lugar ha cambiado. ' if lugar_cambiado else ''}"
+                        f"Fecha: {self.scheduled_at.strftime('%d/%m/%Y %H:%M')}, "
+                        f"Lugar: {self.location}",
+                priority=Notification.PRIORITY_HIGH,
+                user=None,  # Notificación global
+                event=self
+            )
+
+
 
 
 # === MODELOS PARA COMMENTs ===
@@ -111,15 +145,14 @@ class Notification(models.Model):
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES)
-    is_read = models.BooleanField(default=False, null=True)
-    
+    is_read = models.BooleanField(default=False)
+
     event = models.ForeignKey("Event", on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     def __str__(self):
         return self.title
 
-        
-        
+
 # === MODELOS PARA REFUNDREQUESTs ===
 class RefundRequest(models.Model):
     ticket_code = models.CharField(max_length=100)
@@ -131,7 +164,6 @@ class RefundRequest(models.Model):
 
     def __str__(self):
         return f"Solicitud de devolución para el ticket {self.ticket_code} por {self.user.username}"
-
 
 
 # === MODELOS PARA TICKETs ===
@@ -150,7 +182,12 @@ class Ticket(models.Model):
 
     def __str__(self):
         texto = "{0} ({1})"
-        return texto.format(self.ticket_code, self.buy_date)  
+        return texto.format(self.ticket_code, self.buy_date)
+    
+    def save(self, *args, **kwargs):
+        if self.quantity > 4:
+            raise ValidationError("No se puede comprar más de 4 tickets.")
+        super().save(*args, **kwargs)
 
 
 # === MODELOS PARA RATINGs ===

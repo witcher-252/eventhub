@@ -4,11 +4,11 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.utils.timezone import localtime
+from django.utils.timezone import localtime, now
 
 from .forms import CompraTicketForm, NotificationForm, RatingForm, RefundRequestForm, TicketForm
 from .models import Comment, Event, Notification, Rating, RefundRequest, Ticket, User
@@ -25,7 +25,8 @@ def notification_redirect(request):
 @login_required
 def notification_list_user(request):
     notifications = Notification.objects.filter(
-        Q(user=request.user) | Q(user__isnull=True)
+        Q(user=request.user) |
+        Q(user__isnull=True, event__in=Ticket.objects.filter(usuario=request.user).values('evento'))
     ).select_related('event')
     unread_count = notifications.filter(is_read=False).count()
     return render(request, 'notifications/list_user.html', {
@@ -35,14 +36,10 @@ def notification_list_user(request):
 
 @login_required
 def notification_list(request):
+    notifications = Notification.objects.all().select_related('user', 'event')
     q = request.GET.get('q')
     event_id = request.GET.get('event')
     priority = request.GET.get('priority')
-
-    noti_general = Notification.objects.filter(user__isnull=True).select_related('user', 'event')
-    noti_usuario = Notification.objects.filter(user=request.user).select_related('user', 'event')
-
-    notifications = (noti_general | noti_usuario).order_by('-created_at')
 
     if q:
         notifications = notifications.filter(title__icontains=q)
@@ -52,15 +49,10 @@ def notification_list(request):
         notifications = notifications.filter(priority=priority)
 
     events = Event.objects.all()
-    
     return render(request, 'notifications/list.html', {
         'notifications': notifications,
-        'events': events,
+        'events': events
     })
-    
-    
-
-
     
 @login_required
 def mark_as_read(request, pk):
@@ -110,7 +102,7 @@ def notification_delete(request, pk):
         return redirect('notification_list')
     return render(request, 'notifications/delete.html', {'notification': notification})
 
-        
+
 # === CONTROLLERS PARA USERS ===
 def register(request):
     if request.method == "POST":
@@ -167,7 +159,7 @@ def home(request):
 # === CONTROLLERS PARA EVENTS ===
 @login_required
 def events(request):
-    events = Event.objects.all().order_by("scheduled_at")
+    events = Event.objects.filter(scheduled_at__gte=now()).order_by("scheduled_at")
     return render(
         request,
         "app/events.html",
@@ -204,121 +196,75 @@ def event_form(request, id=None):
     if not user.is_organizer:
         return redirect("events")
 
+    event = get_object_or_404(Event, pk=id) if id else None
+
     if request.method == "POST":
         title = request.POST.get("title")
         description = request.POST.get("description")
+        location = request.POST.get("location")
         date = request.POST.get("date")
         time = request.POST.get("time")
-        location = request.POST.get("location")  # <-- NUEVO CAMPO
 
         [year, month, day] = date.split("-")
         [hour, minutes] = time.split(":")
-        #para saber cuando esta programado el evento
         scheduled_at = timezone.make_aware(
             datetime.datetime(int(year), int(month), int(day), int(hour), int(minutes))
         )
 
-        if id is None:
+        if event is None:
+            # Crear nuevo evento
             Event.objects.create(
                 title=title,
                 description=description,
+                location=location,
                 scheduled_at=scheduled_at,
-                place=location,
-                organizer=request.user
+                organizer=user,
             )
         else:
-            event = get_object_or_404(Event, pk=id)
-            event.title = title
-            event.description = description
-            event.scheduled_at = scheduled_at
-            event.place = location  # <-- NUEVO CAMPO
-            event.save()
+            # Actualizar evento con notificación si corresponde
+            event.update_with_notification(
+                title=title,
+                description=description,
+                scheduled_at=scheduled_at,
+                location=location
+            )
 
         return redirect("events")
 
-    event = {}
-    if id is not None:
-        event = get_object_or_404(Event, pk=id)
-
+    # GET
+    context_event = event if event else {}
     return render(
         request,
         "app/event_form.html",
-        {"event": event, "user_is_organizer": request.user.is_organizer},
+        {"event": context_event, "user_is_organizer": user.is_organizer},
     )
+
 
 # === CONTROLLER PARA COMMENTS ===
 @login_required
-def comment(request, id=None):
-    user = request.user
-
-    if not user.is_organizer:
-        return redirect("events")
-
-    if request.method == "POST":
-        title = request.POST.get("title")
-        description = request.POST.get("description")
-        date = request.POST.get("date")
-        time = request.POST.get("time")
-        location = request.POST.get("location")  # <-- NUEVO CAMPO
-
-        [year, month, day] = date.split("-")
-        [hour, minutes] = time.split(":")
-        scheduled_at = timezone.make_aware(
-            datetime.datetime(int(year), int(month), int(day), int(hour), int(minutes))
-        )
-
-        if id is None:
-            Event.objects.create(
-                title=title,
-                description=description,
-                scheduled_at=scheduled_at,
-                place=location,
-                organizer=request.user
-            )
-            messages.success(request, "Evento creado correctamente.")
-        else:
-            event = get_object_or_404(Event, pk=id)
-            changed_fields = []
-            if event.scheduled_at != scheduled_at:
-                changed_fields.append("fecha")
-            if event.place != location:
-                changed_fields.append("lugar")
-
-            event.title = title
-            event.description = description
-            event.scheduled_at = scheduled_at
-            event.place = location
-            event.save()
-
-            if changed_fields:
-                campos = " y ".join(changed_fields)
-                messages.info(
-                    request,
-                    f"Has cambiado el {campos} del evento. Se notificará a los usuarios."
-                )
-                # Aquí podrías agregar lógica para enviar emails o crear notificaciones en BD
-            else:
-                messages.success(request, "Evento actualizado correctamente.")
-
-        return redirect("events")
-
-    event = {}
-    if id is not None:
-        event = get_object_or_404(Event, pk=id)
-
-    return render(
-        request,
-        "app/event_form.html",
-        {"event": event, "user_is_organizer": request.user.is_organizer},
-    )
-
+def comment(request, event_id):
+    event = get_object_or_404(Event, pk=event_id)
+    comments = Comment.objects.filter(event=event).order_by("-created_at")
+    
+    paginator = Paginator(comments, 20)
+    page_number = request.GET.get("page")
+    comments_page = paginator.get_page(page_number)
+    
+    return render(request, "comments/comments.html", {
+        "event": event,
+        "comments": comments_page
+    })
 
 @login_required
 def registrar_comentario(request):
     if request.method == 'POST':
-        event_id = request.POST.get('event_id')
         title = request.POST.get('title')
         text = request.POST.get('text')
+        event_id = request.POST.get('event_id')
+
+        if not event_id:
+            # Manejar el error si el event_id no se proporciona
+            return HttpResponseBadRequest("No se ha proporcionado el ID del evento.")
 
         event = get_object_or_404(Event, id=event_id)
 
@@ -329,34 +275,45 @@ def registrar_comentario(request):
             event=event
         )
 
-        return redirect('event_detail', event.id)  
-    
+        return redirect("comments", event_id=event.id) # type: ignore
+    return HttpResponseBadRequest("Método no permitido.")
 
 @login_required
-def delete_comment(request, event_id, comment_id):
-    comment = get_object_or_404(Comment, id=comment_id, event__id=event_id)
+def delete_comment(request, event_id, id):
+    comment = get_object_or_404(Comment, id=id, event_id=event_id)
 
-    if request.user == comment.user or request.user.is_organizer:
-        comment.delete()
+    # Un usuario común puede eliminar su comentario; un organizador puede eliminar cualquier comentario
+    if not (request.user == comment.user or request.user.is_organizer):
+        return HttpResponseForbidden("No tenés permiso para eliminar este comentario.")
 
-    return redirect('event_detail', event_id)  
+    comment.delete()
+    messages.success(request, "Comentario eliminado con éxito.")
+    return redirect("comments", event_id=event_id)
 
 @login_required
 def edit_comment(request, event_id, comment_id):
     comment = get_object_or_404(Comment, id=comment_id, event__id=event_id)
 
-    # Solo el autor del comentario puede editar
-    if request.user != comment.user:
-        return redirect('event_detail', event_id)
+    # Solo el autor del comentario puede editarlo, siempre que NO sea organizador
+    if request.user.is_organizer or request.user != comment.user:
+        messages.error(request, "No tienes permiso para editar este comentario.")
+        return redirect('comments/comments', event_id=event_id)
 
     if request.method == 'POST':
-        comment.title = request.POST.get('title')
-        comment.text = request.POST.get('text')
-        comment.save()
-        return redirect('event_detail', event_id)
-    
+        title = request.POST.get('title')
+        text = request.POST.get('text')
 
-    return render(request, 'edit_comment.html', {'comment': comment})
+        if title and text:
+            comment.title = title
+            comment.text = text
+            comment.save()
+            messages.success(request, "Comentario actualizado correctamente.")
+        else:
+            messages.error(request, "Ambos campos son obligatorios.")
+
+        return redirect('comments', event_id=event_id)
+
+    return redirect('comments', event_id=event_id)
 
 
 # === CONTROLLERS PARA REFUNDREQUESTS ===
@@ -500,12 +457,25 @@ def edit_ticket(request, id):
 
 @login_required
 def update_ticket(request):
+    usuario = request.user
     form = TicketForm(request.POST)
     if form.is_valid():
             tipo = form.cleaned_data['tipoEntrada']
             cantidad = form.cleaned_data['cantidadTk']
             id = form.cleaned_data['ticketCode']
             tk = get_object_or_404(Ticket, ticket_code=id)
+            event = tk.evento
+            
+            entradas_existentes = Ticket.objects.filter(
+            usuario=usuario,
+            evento=event).aggregate(total=Sum("quantity"))["total"] or 0
+
+            entradas_existentes = entradas_existentes - tk.quantity
+
+            if entradas_existentes + cantidad > 4:
+                form.add_error('cantidadTk',f"Ya has comprado {entradas_existentes + tk.quantity} entradas para este evento. "
+            f"Con esta compra ({cantidad - tk.quantity }) superarías el límite de 4 entradas.")
+                return render(request, "ticket/edicionTicket.html",{ "form": form})
             tk.quantity = cantidad
             tk.type = tipo
             tk.save()
@@ -532,6 +502,22 @@ def confirm_ticket(request):
         event = get_object_or_404(Event, pk=id_evento)
         cantidad = form.cleaned_data['cantidad']
         tipo = form.cleaned_data['tipo']
+
+        # Validación: no permitir más de 4 entradas por usuario por evento
+        entradas_existentes = Ticket.objects.filter(
+            usuario=usuario,
+            evento=event
+        ).aggregate(total=Sum("quantity"))["total"] or 0
+
+        if entradas_existentes + cantidad > 4:
+            form.add_error('cantidad',f"Ya has comprado {entradas_existentes} entradas para este evento. "
+            f"Con esta compra ({cantidad}) superarías el límite de 4 entradas.")
+            return render(request, "ticket/entrada.html", {
+                "user_is_organizer": usuario.is_organizer,
+                "evento": event,
+                "form": form
+            })
+        
         Ticket.objects.create( quantity=cantidad , buy_date=timezone.now(), type=tipo, usuario=usuario, evento = event)
         return redirect('gestion_ticket', idEvento= id_evento)
     else:
