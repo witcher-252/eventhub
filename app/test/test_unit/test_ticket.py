@@ -1,7 +1,9 @@
-from django.test import TestCase
 from django.core.exceptions import ValidationError
-from ...models import Ticket, Event, User
+from django.test import TestCase
 from django.utils import timezone
+
+from ...models import Event, Ticket, User
+
 
 class TicketModelTest(TestCase):
     def setUp(self):

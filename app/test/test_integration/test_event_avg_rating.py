@@ -1,11 +1,11 @@
 import datetime
-import time
 
-from django.test import Client, TestCase
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from app.models import Event, User, Rating
+from app.models import Event, Rating, User
+
 
 class EventDetailIntegrationTest(TestCase):
     def setUp(self):

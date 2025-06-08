@@ -1,9 +1,12 @@
+from datetime import timedelta
+
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from django.utils.timezone import now
-from datetime import timedelta
-from django.contrib.auth import get_user_model
+
 from app.models import Event
+
 
 class IntegrationHidePastEventsTest(TestCase):
     def setUp(self):

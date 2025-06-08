@@ -1,7 +1,9 @@
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
+
 from ...models import Event, Ticket, User
+
 
 class ConfirmTicketViewTest(TestCase):
 

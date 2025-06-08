@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build Docker image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t eventhub:ci-test .
+
+      - name: Test Docker image runs
+        run: |
+          docker run -d --name test-container -p 8000:8000 eventhub:ci-test
+          sleep 10
+          curl -f http://localhost:8000 || (docker logs test-container && exit 1)
+          docker stop test-container
+
+  unit_integration_tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Create test .env file
+        run: |
+          echo "DJANGO_ENV=dev" > .env
+          echo "SECRET_KEY=test-secret-key-for-ci-very-long-and-secure" >> .env
+          echo "ALLOWED_HOSTS=localhost,127.0.0.1,testserver" >> .env
+          echo "PORT=8000" >> .env
+
+      - name: Run migrations
+        run: python manage.py migrate
+
+      - name: Run static analysis
+        run: python -m ruff check
+
+      - name: Run unit and integration tests with coverage
+        run: |
+          coverage run --source="./app" --omit="./app/migrations/**" manage.py test app.test.test_unit app.test.test_integration
+          coverage report --fail-under=50
+
+  e2e_tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Create test .env file
+        run: |
+          echo "DJANGO_ENV=dev" > .env
+          echo "SECRET_KEY=test-secret-key-for-ci-very-long-and-secure" >> .env
+          echo "ALLOWED_HOSTS=localhost,127.0.0.1,testserver" >> .env
+          echo "PORT=8000" >> .env
+
+      - name: Run migrations
+        run: python manage.py migrate
+
+      - name: Install Playwright browsers
+        run: python -m playwright install --with-deps firefox
+
+      - name: Start Django server in background
+        run: |
+          python manage.py runserver 0.0.0.0:8000 &
+          sleep 15
+          curl -f http://localhost:8000 || (echo "Server failed to start" && exit 1)
+
+      - name: Run E2E tests
+        run: python manage.py test app.test.test_e2e
+
+      - name: Upload test artifacts on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: test-results/
