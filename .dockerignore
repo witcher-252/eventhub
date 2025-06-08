@@ -1,0 +1,43 @@
+# Configuración y archivos locales
+.git
+.gitignore
+.vscode
+.idea
+.env
+.env.*
+README.md
+*.md
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Archivos temporales y compilados
+*.pyc
+*.pyo
+*.pyd
+*.log
+__pycache__/
+
+# Entornos virtuales y base de datos local
+venv/
+.venv/
+*.sqlite3
+*.db
+
+# Tests y herramientas de desarrollo
+coverage/
+.coverage
+htmlcov/
+test-results/
+.pytest_cache/
+functional_tests/
+test_*.py
+*_test.py
+tests/
+
+# Archivos de desarrollo
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

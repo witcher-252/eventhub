@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,13 +20,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure--f67ll=2-b2qolla9=1f8mtg@s=l8^y8aj=@ij-0f4)eg@%8(0"
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+DEBUG = os.environ.get('DJANGO_ENV', 'dev') == 'dev'
 
+if DEBUG:
+    SECRET_KEY = "0$y#_1znqx7n!*8q45-+-lo)%v0$s6bvr%y(zqsi(ua!j*xi^+"
+    ALLOWED_HOSTS = []
+else:
+    SECRET_KEY = os.environ['SECRET_KEY']
+    ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Application definition
 
@@ -104,7 +111,7 @@ AUTH_PASSWORD_VALIDATORS = [
 STATIC_URL = "/static/"
 
 # Bootstrap 5
-STATICFILES_DIRS = [BASE_DIR / "static"]
+# STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
