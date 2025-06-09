@@ -95,15 +95,14 @@ jobs:
           curl -f http://localhost:8000 || (echo "Server failed to start" && exit 1)
 
       - name: Run E2E tests
-        run: pytest app/test/test_e2e -v
+        run: pytest app/test/test_e2e -v --browser firefox
         env:
           DJANGO_SETTINGS_MODULE: eventhub.settings
 
       - name: Upload test artifacts on failure
         uses: actions/upload-artifact@v4
-        if: always() 
+        if: always()  
         with:
           name: playwright-report
           path: test-results/
-          if-no-files-found: ignore 
-
+          if-no-files-found: ignore  
