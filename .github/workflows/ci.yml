@@ -41,6 +41,11 @@ jobs:
             - run: |
                   pip  install playwright
                   playwright install --with-deps
+            - name: Run unit tests
+              run: python manage.py test app/test/test_unit
 
+            - name: Run integration tests
+              run: python manage.py test app/test/test_integration
+              
             - name: Run e2e tests
               run: python manage.py test app/test/test_e2e
