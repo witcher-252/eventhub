@@ -1,0 +1,50 @@
+name: CD
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verificar que CI haya pasado
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runs = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              branch: 'main',
+              event: 'push'
+            });
+
+            const ciRun = runs.data.workflow_runs.find(run =>
+              run.name === 'CI' && run.conclusion === 'success'
+            );
+
+            if (!ciRun) {
+              core.setFailed('El workflow CI no pasó exitosamente en main. Cancelando deploy.');
+            }
+
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Login a Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Buildear imagen Docker
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/eventhub:${{ github.ref_name }} .
+
+      - name: Pushear imagen a Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/eventhub:${{ github.ref_name }}
+
+      - name: Hacer deploy en Render
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}
