@@ -90,10 +90,7 @@ jobs:
           sleep 15
           curl -f http://localhost:8000 || (echo "Server failed to start" && exit 1)
       - name: Run E2E tests
-        run: pytest app/test/test_e2e -v --browser firefox
-        env:
-          DJANGO_SETTINGS_MODULE: eventhub.settings
-          PYTHONPATH: .
+        run: pytest app/test/test_e2e
 
       - name: Upload test artifacts on failure
         uses: actions/upload-artifact@v4
