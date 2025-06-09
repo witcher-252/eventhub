@@ -38,8 +38,9 @@ jobs:
                   cache: 'pip'
             - run: pip install -r requirements-dev.txt
 
-            - name: Install playwright
-              run: python -m playwright install --with-deps firefox
+            - run: |
+                  pip  install playwright
+                  playwright install --with-deps
 
             - name: Run e2e tests
               run: python manage.py test app/test/test_e2e
